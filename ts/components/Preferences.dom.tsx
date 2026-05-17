@@ -644,11 +644,9 @@ export function Preferences({
   );
   const [networkProxyError, setNetworkProxyError] = useState<string>();
   const [isApplyingNetworkProxy, setIsApplyingNetworkProxy] = useState(false);
-  let networkProxyDescription =
-    'Disables configured proxy routing for the app.';
+  let networkProxyDescription = 'Disables configured proxy routing for the app.';
   if (draftNetworkProxyMode === 'tor') {
-    networkProxyDescription =
-      'Uses the local Tor SOCKS proxy at 127.0.0.1:9050.';
+    networkProxyDescription = 'Uses the local Tor SOCKS proxy at 127.0.0.1:9050.';
   } else if (draftNetworkProxyMode === 'system') {
     networkProxyDescription =
       'Uses COCA_PROXY_URL / ALL_PROXY / SOCKS_PROXY / HTTPS_PROXY / HTTP_PROXY when set.';

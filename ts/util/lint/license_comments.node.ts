@@ -188,12 +188,18 @@ async function main() {
 
     const warnings = [];
 
-    if (firstLine == null || !/Copyright \d{4}/.test(firstLine)) {
+    if (
+      firstLine == null ||
+      !/Copyright \d{4}/.test(firstLine)
+    ) {
       const commit = await getCommitFileWasAdded(file);
       warnings.push(
         styleText('red', 'Missing/Incorrect copyright line'),
         indent(
-          styleText('green', `Expected: "Copyright ${commit.commitYear}"`)
+          styleText(
+            'green',
+            `Expected: "Copyright ${commit.commitYear}"`
+          )
         ),
         // oxlint-disable-next-line typescript/restrict-template-expressions
         indent(styleText('yellow', `Actual: "${firstLine}"`)),
