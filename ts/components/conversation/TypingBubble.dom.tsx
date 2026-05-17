@@ -89,15 +89,15 @@ function TypingBubbleAvatar({
   theme: ThemeType;
 }): ReactElement | null {
   const reducedMotion = useReducedMotion();
-  const hiddenAvatarState = visible ? 'hidden' : 'visible';
-  const visibleAvatarState = visible ? 'visible' : 'hidden';
   // oxlint-disable-next-line react-hooks/exhaustive-deps -- FIXME
   const [springProps, springApi] = useSpring(
     {
       immediate: reducedMotion,
       config: SPRING_CONFIG,
-      from: shouldAnimate ? AVATAR_ANIMATION_PROPS[hiddenAvatarState] : {},
-      to: AVATAR_ANIMATION_PROPS[visibleAvatarState],
+      from: shouldAnimate
+        ? AVATAR_ANIMATION_PROPS[visible ? 'hidden' : 'visible']
+        : {},
+      to: AVATAR_ANIMATION_PROPS[visible ? 'visible' : 'hidden'],
       onRest: () => {
         if (!visible) {
           onContactExit(contact?.id);

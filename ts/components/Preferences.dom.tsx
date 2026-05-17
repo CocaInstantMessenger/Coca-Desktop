@@ -644,13 +644,6 @@ export function Preferences({
   );
   const [networkProxyError, setNetworkProxyError] = useState<string>();
   const [isApplyingNetworkProxy, setIsApplyingNetworkProxy] = useState(false);
-  let networkProxyDescription = 'Disables configured proxy routing for the app.';
-  if (draftNetworkProxyMode === 'tor') {
-    networkProxyDescription = 'Uses the local Tor SOCKS proxy at 127.0.0.1:9050.';
-  } else if (draftNetworkProxyMode === 'system') {
-    networkProxyDescription =
-      'Uses COCA_PROXY_URL / ALL_PROXY / SOCKS_PROXY / HTTPS_PROXY / HTTP_PROXY when set.';
-  }
 
   const handleOpenEditChatFoldersPage = useCallback(
     (chatFolderId: ChatFolderId | null) => {
@@ -2111,7 +2104,11 @@ export function Preferences({
             <FlowingControl>
               <div className="Preferences__two-thirds-flow">
                 <div className="Preferences__description">
-                  {networkProxyDescription}
+                  {draftNetworkProxyMode === 'tor'
+                    ? 'Uses the local Tor SOCKS proxy at 127.0.0.1:9050.'
+                    : draftNetworkProxyMode === 'system'
+                      ? 'Uses COCA_PROXY_URL / ALL_PROXY / SOCKS_PROXY / HTTPS_PROXY / HTTP_PROXY when set.'
+                      : 'Disables configured proxy routing for the app.'}
                 </div>
               </div>
               <div

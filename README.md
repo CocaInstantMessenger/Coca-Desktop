@@ -1,6 +1,3 @@
-<!-- Copyright 2026 Coca Messenger -->
-<!-- SPDX-License-Identifier: AGPL-3.0-only -->
-
 # Coca Desktop
 
 Coca Desktop links with Signal on [Android](https://github.com/signalapp/Signal-Android) or [iOS](https://github.com/signalapp/Signal-iOS) and lets you message from your Windows, macOS, and Linux computers.
