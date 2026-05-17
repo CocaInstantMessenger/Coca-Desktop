@@ -13,7 +13,7 @@ on:
 jobs:
   lint:
     name: Lint
-    runs-on: ubuntu-22.04-8-cores
+    runs-on: ubuntu-22.04
     timeout-minutes: 30
 
     steps:
@@ -166,7 +166,7 @@ jobs:
   linux:
     name: Linux
     needs: lint
-    runs-on: ubuntu-22.04-8-cores
+    runs-on: ubuntu-22.04
     timeout-minutes: 30
 
     steps:
@@ -339,7 +339,7 @@ jobs:
 
   sticker-creator:
     name: Sticker Creator
-    runs-on: ubuntu-22.04-8-cores
+    runs-on: ubuntu-22.04
     timeout-minutes: 30
 
     defaults:
