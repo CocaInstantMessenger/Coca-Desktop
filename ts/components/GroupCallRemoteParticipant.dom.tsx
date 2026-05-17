@@ -1,7 +1,14 @@
 // Copyright 2020 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import type { CSSProperties, ReactNode, RefObject, FC } from 'react';
+import type {
+  CSSProperties,
+  KeyboardEvent,
+  MouseEvent,
+  ReactNode,
+  RefObject,
+  FC,
+} from 'react';
 import {
   useState,
   useRef,
@@ -57,6 +64,7 @@ type BasePropsType = {
   isCallReconnecting: boolean;
   isInOverflow?: boolean;
   joinedAt: number | null;
+  onClickParticipant?: (demuxId: number) => void;
   onClickRaisedHand?: () => void;
   onVisibilityChanged?: (demuxId: number, isVisible: boolean) => unknown;
   remoteParticipant: GroupCallRemoteParticipantType;
@@ -93,6 +101,7 @@ export const GroupCallRemoteParticipant: FC<PropsType> = memo(
       getGroupCallVideoFrameSource,
       imageDataCache,
       i18n,
+      onClickParticipant,
       onClickRaisedHand,
       onVisibilityChanged,
       remoteParticipantsCount,
@@ -580,6 +589,35 @@ export const GroupCallRemoteParticipant: FC<PropsType> = memo(
       ]
     );
 
+    const canClickParticipant = Boolean(onClickParticipant);
+    const handleClickParticipant = useCallback(
+      (event: MouseEvent) => {
+        if (!onClickParticipant) {
+          return;
+        }
+        if (
+          event.target instanceof Element &&
+          event.target.closest('button') != null
+        ) {
+          return;
+        }
+        onClickParticipant(demuxId);
+      },
+      [demuxId, onClickParticipant]
+    );
+    const handleParticipantKeyDown = useCallback(
+      (event: KeyboardEvent) => {
+        if (!onClickParticipant) {
+          return;
+        }
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onClickParticipant(demuxId);
+        }
+      },
+      [demuxId, onClickParticipant]
+    );
+
     return (
       <>
         <AxoConfirmDialog.Root
@@ -593,6 +631,7 @@ export const GroupCallRemoteParticipant: FC<PropsType> = memo(
         </AxoConfirmDialog.Root>
         {maybeWrapWithParticipantMenu(
           'AxoContextMenu',
+          // oxlint-disable-next-line jsx-a11y/no-static-element-interactions
           <div
             className={classNames(
               'module-ongoing-call__group-call-remote-participant',
@@ -604,10 +643,16 @@ export const GroupCallRemoteParticipant: FC<PropsType> = memo(
               isHandRaised &&
                 'module-ongoing-call__group-call-remote-participant--hand-raised',
               isOnTop &&
-                'module-ongoing-call__group-call-remote-participant--is-on-top'
+                'module-ongoing-call__group-call-remote-participant--is-on-top',
+              canClickParticipant &&
+                'module-ongoing-call__group-call-remote-participant--clickable'
             )}
+            onClick={handleClickParticipant}
+            onKeyDown={handleParticipantKeyDown}
             ref={intersectionRef}
+            role={canClickParticipant ? 'button' : undefined}
             style={containerStyles}
+            tabIndex={canClickParticipant ? 0 : undefined}
           >
             {!props.isInPip && (
               <>

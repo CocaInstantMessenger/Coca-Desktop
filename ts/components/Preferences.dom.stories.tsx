@@ -32,7 +32,6 @@ import {
 } from '../state/ducks/usernameEnums.std.ts';
 import type { SettingsLocation } from '../types/Nav.std.ts';
 import { NavTab, ProfileEditorPage, SettingsPage } from '../types/Nav.std.ts';
-import { PreferencesDonations } from './PreferencesDonations.dom.tsx';
 import { strictAssert } from '../util/assert.std.ts';
 import { PreferencesChatFoldersPage } from './preferences/chatFolders/PreferencesChatFoldersPage.dom.tsx';
 import { PreferencesEditChatFolderPage } from './preferences/chatFolders/PreferencesEditChatFoldersPage.dom.tsx';
@@ -43,16 +42,9 @@ import {
 } from './PreferencesNotificationProfiles.dom.tsx';
 import { DayOfWeek } from '../types/NotificationProfile.std.ts';
 
-import type { LocalizerType } from '../types/Util.std.ts';
 import type { PropsType } from './Preferences.dom.tsx';
 import type { WidthBreakpoint } from './_util.std.ts';
 import type { MessageAttributesType } from '../model-types.d.ts';
-import type {
-  DonationReceipt,
-  DonationWorkflow,
-  OneTimeDonationHumanAmounts,
-} from '../types/Donations.std.ts';
-import type { AnyToast } from '../types/Toast.dom.tsx';
 import type { SmartPreferencesChatFoldersPageProps } from '../state/smart/PreferencesChatFoldersPage.preload.tsx';
 import type { SmartPreferencesEditChatFolderPageProps } from '../state/smart/PreferencesEditChatFolderPage.preload.tsx';
 import { CurrentChatFolders } from '../types/CurrentChatFolders.std.ts';
@@ -140,41 +132,6 @@ const validateBackupResult: ExportResultType = {
   },
 };
 
-const donationAmountsConfig = {
-  cad: {
-    minimum: 4,
-    oneTime: {
-      1: [7, 15, 30, 40, 70, 140],
-      100: [7],
-    },
-    supportedPaymentMethods: ['CARD, PAYPAL'],
-  },
-  jpy: {
-    minimum: 400,
-    oneTime: {
-      '1': [500, 1000, 2000, 3000, 5000, 10000],
-      '100': [500],
-    },
-    supportedPaymentMethods: ['CARD, PAYPAL'],
-  },
-  usd: {
-    minimum: 3,
-    oneTime: {
-      1: [5, 10, 20, 30, 50, 100],
-      100: [5],
-    },
-    supportedPaymentMethods: ['CARD, PAYPAL'],
-  },
-  ugx: {
-    minimum: 8000,
-    oneTime: {
-      1: [15000, 35000, 70000, 100000, 150000, 300000],
-      100: [15000],
-    },
-    supportedPaymentMethods: ['CARD'],
-  },
-} as unknown as OneTimeDonationHumanAmounts;
-
 function renderUpdateDialog(
   props: Readonly<{ containerWidthBreakpoint: WidthBreakpoint }>
 ): JSX.Element {
@@ -237,59 +194,6 @@ function renderProfileEditor({
       usernameLinkColor={undefined}
       usernameLinkCorrupted={false}
       usernameLinkState={UsernameLinkState.Ready}
-    />
-  );
-}
-
-function renderDonationsPane(props: {
-  contentsRef: MutableRefObject<HTMLDivElement | null>;
-  settingsLocation: SettingsLocation;
-  setSettingsLocation: (settingsLocation: SettingsLocation) => void;
-  me: typeof me;
-  donationReceipts: ReadonlyArray<DonationReceipt>;
-  saveAttachmentToDisk: (options: {
-    data: Uint8Array<ArrayBuffer>;
-    name: string;
-    baseDir?: string | undefined;
-  }) => Promise<{ fullPath: string; name: string } | null>;
-  generateDonationReceiptBlob: (
-    receipt: DonationReceipt,
-    i18n: LocalizerType
-  ) => Promise<Blob>;
-  showToast: (toast: AnyToast) => void;
-  workflow?: DonationWorkflow;
-}): JSX.Element {
-  return (
-    <PreferencesDonations
-      applyDonationBadge={action('applyDonationBadge')}
-      i18n={i18n}
-      contentsRef={props.contentsRef}
-      clearWorkflow={action('clearWorkflow')}
-      initialCurrency="usd"
-      resumeWorkflow={action('resumeWorkflow')}
-      isOnline
-      settingsLocation={props.settingsLocation}
-      setSettingsLocation={props.setSettingsLocation}
-      submitDonation={action('submitDonation')}
-      lastError={undefined}
-      workflow={props.workflow}
-      didResumeWorkflowAtStartup={false}
-      badge={undefined}
-      color={props.me.color}
-      firstName={props.me.firstName}
-      profileAvatarUrl={props.me.profileAvatarUrl}
-      donationAmountsConfig={donationAmountsConfig}
-      validCurrencies={Object.keys(donationAmountsConfig)}
-      donationReceipts={props.donationReceipts}
-      saveAttachmentToDisk={props.saveAttachmentToDisk}
-      generateDonationReceiptBlob={props.generateDonationReceiptBlob}
-      showToast={props.showToast}
-      theme={ThemeType.light}
-      updateLastError={action('updateLastError')}
-      donationBadge={undefined}
-      fetchBadgeData={async () => undefined}
-      me={props.me}
-      myProfileChanged={action('myProfileChanged')}
     />
   );
 }
@@ -449,6 +353,9 @@ export default {
     hasMediaCameraPermissions: true,
     hasMediaPermissions: true,
     hasMessageAudio: true,
+    networkProxyMode: 'system',
+    networkProxyUrl: null,
+    effectiveProxyUrl: undefined,
     hasMinimizeToAndStartInSystemTray: true,
     hasMinimizeToSystemTray: true,
     hasNotificationAttention: false,
@@ -511,32 +418,6 @@ export default {
     whoCanSeeMe: PhoneNumberSharingMode.Everybody,
     zoomFactor: 1,
 
-    renderDonationsPane: ({
-      contentsRef,
-      settingsLocation,
-      setSettingsLocation,
-    }: {
-      contentsRef: MutableRefObject<HTMLDivElement | null>;
-      settingsLocation: SettingsLocation;
-      setSettingsLocation: (settingsLocation: SettingsLocation) => void;
-    }) =>
-      renderDonationsPane({
-        contentsRef,
-        settingsLocation,
-        setSettingsLocation,
-        me,
-        donationReceipts: [],
-        saveAttachmentToDisk: async () => {
-          action('saveAttachmentToDisk')();
-          return { fullPath: '/mock/path/to/file.png', name: 'file.png' };
-        },
-
-        generateDonationReceiptBlob: async () => {
-          action('generateDonationReceiptBlob')();
-          return new Blob();
-        },
-        showToast: action('showToast'),
-      }),
     renderNotificationProfilesCreateFlow,
     renderNotificationProfilesHome,
     renderProfileEditor,
@@ -586,6 +467,9 @@ export default {
     onMediaCameraPermissionsChange: action('onMediaCameraPermissionsChange'),
     onMediaPermissionsChange: action('onMediaPermissionsChange'),
     onMessageAudioChange: action('onMessageAudioChange'),
+    onNetworkProxySettingsChange: async () => {
+      action('onNetworkProxySettingsChange')();
+    },
     onMinimizeToAndStartInSystemTrayChange: action(
       'onMinimizeToAndStartInSystemTrayChange'
     ),
@@ -741,10 +625,6 @@ export const DataUsage = Template.bind({});
 DataUsage.args = {
   settingsLocation: { page: SettingsPage.DataUsage },
 };
-export const Donations = Template.bind({});
-Donations.args = {
-  settingsLocation: { page: SettingsPage.Donations },
-};
 export const ChatsWithDisabledPlaintextExport = Template.bind({});
 ChatsWithDisabledPlaintextExport.args = {
   settingsLocation: {
@@ -885,146 +765,6 @@ NotificationsPageWithThreeProfiles.args = {
       />
     );
   },
-};
-
-export const DonationsDonateFlow = Template.bind({});
-DonationsDonateFlow.args = {
-  settingsLocation: { page: SettingsPage.DonationsDonateFlow },
-  renderDonationsPane: ({
-    contentsRef,
-  }: {
-    contentsRef: MutableRefObject<HTMLDivElement | null>;
-    settingsLocation: SettingsLocation;
-    setSettingsLocation: (settingsLocation: SettingsLocation) => void;
-  }) =>
-    renderDonationsPane({
-      contentsRef,
-      me,
-      donationReceipts: [],
-      settingsLocation: { page: SettingsPage.DonationsDonateFlow },
-      setSettingsLocation: action('setSettingsLocation'),
-      saveAttachmentToDisk: async () => {
-        action('saveAttachmentToDisk')();
-        return { fullPath: '/mock/path/to/file.png', name: 'file.png' };
-      },
-      generateDonationReceiptBlob: async () => {
-        action('generateDonationReceiptBlob')();
-        return new Blob();
-      },
-      showToast: action('showToast'),
-    }),
-};
-export const DonationReceipts = Template.bind({});
-DonationReceipts.args = {
-  settingsLocation: { page: SettingsPage.DonationsDonateFlow },
-  renderDonationsPane: ({
-    contentsRef,
-  }: {
-    contentsRef: MutableRefObject<HTMLDivElement | null>;
-    settingsLocation: SettingsLocation;
-    setSettingsLocation: (settingsLocation: SettingsLocation) => void;
-  }) =>
-    renderDonationsPane({
-      contentsRef,
-      me,
-      donationReceipts: [
-        {
-          id: '9f9288a1-acb6-4d2e-a4fe-0a736a318a26',
-          currencyType: 'usd',
-          paymentAmount: 1000,
-          timestamp: 1754000413436,
-        },
-        {
-          id: '22defee0-8797-4a49-bac8-1673232706fa',
-          currencyType: 'jpy',
-          paymentAmount: 1000,
-          timestamp: 1753995255509,
-        },
-      ],
-      settingsLocation: { page: SettingsPage.DonationsReceiptList },
-      setSettingsLocation: action('setSettingsLocation'),
-      saveAttachmentToDisk: async () => {
-        action('saveAttachmentToDisk')();
-        return { fullPath: '/mock/path/to/file.png', name: 'file.png' };
-      },
-      generateDonationReceiptBlob: async () => {
-        action('generateDonationReceiptBlob')();
-        return new Blob();
-      },
-      showToast: action('showToast'),
-    }),
-};
-export const DonationsHomeWithInProgressDonation = Template.bind({});
-DonationsHomeWithInProgressDonation.args = {
-  settingsLocation: { page: SettingsPage.Donations },
-  renderDonationsPane: ({
-    contentsRef,
-  }: {
-    contentsRef: MutableRefObject<HTMLDivElement | null>;
-  }) =>
-    renderDonationsPane({
-      contentsRef,
-      me,
-      donationReceipts: [],
-      settingsLocation: { page: SettingsPage.Donations },
-      setSettingsLocation: action('setSettingsLocation'),
-      saveAttachmentToDisk: async () => {
-        action('saveAttachmentToDisk')();
-        return { fullPath: '/mock/path/to/file.png', name: 'file.png' };
-      },
-      generateDonationReceiptBlob: async () => {
-        action('generateDonationReceiptBlob')();
-        return new Blob();
-      },
-      showToast: action('showToast'),
-      workflow: {
-        type: 'INTENT_METHOD',
-        timestamp: Date.now() - 60,
-        paymentMethodId: 'a',
-        paymentAmount: 500,
-        currencyType: 'USD',
-        clientSecret: 'a',
-        paymentIntentId: 'a',
-        id: 'a',
-        returnToken: 'a',
-      },
-    }),
-};
-
-export const DonationsPaypalInProgress = Template.bind({});
-DonationsPaypalInProgress.args = {
-  settingsLocation: { page: SettingsPage.DonationsDonateFlow },
-  renderDonationsPane: ({
-    contentsRef,
-  }: {
-    contentsRef: MutableRefObject<HTMLDivElement | null>;
-  }) =>
-    renderDonationsPane({
-      contentsRef,
-      me,
-      donationReceipts: [],
-      settingsLocation: { page: SettingsPage.DonationsDonateFlow },
-      setSettingsLocation: action('setSettingsLocation'),
-      saveAttachmentToDisk: async () => {
-        action('saveAttachmentToDisk')();
-        return { fullPath: '/mock/path/to/file.png', name: 'file.png' };
-      },
-      generateDonationReceiptBlob: async () => {
-        action('generateDonationReceiptBlob')();
-        return new Blob();
-      },
-      showToast: action('showToast'),
-      workflow: {
-        type: 'PAYPAL_INTENT',
-        timestamp: Date.now() - 60,
-        paypalPaymentId: 'a',
-        paymentAmount: 500,
-        currencyType: 'USD',
-        id: 'a',
-        returnToken: 'a',
-        approvalUrl: 'https://www.signal.org',
-      },
-    }),
 };
 
 export const Internal = Template.bind({});

@@ -87,6 +87,7 @@ export type InstallerStateType = ReadonlyDeep<
 export type RetryBackupImportValue = ReadonlyDeep<'retry' | 'cancel'>;
 
 export const START_INSTALLER = 'installer/START_INSTALLER';
+const STOP_INSTALLER = 'installer/STOP_INSTALLER';
 const SET_PROVISIONING_URL = 'installer/SET_PROVISIONING_URL';
 const SET_QR_CODE_ERROR = 'installer/SET_QR_CODE_ERROR';
 const SET_ERROR = 'installer/SET_ERROR';
@@ -105,6 +106,10 @@ export type StartInstallerActionType = ReadonlyDeep<{
 type SetProvisioningUrlActionType = ReadonlyDeep<{
   type: typeof SET_PROVISIONING_URL;
   payload: string;
+}>;
+
+type StopInstallerActionType = ReadonlyDeep<{
+  type: typeof STOP_INSTALLER;
 }>;
 
 type SetQRCodeErrorActionType = ReadonlyDeep<{
@@ -148,6 +153,7 @@ type UpdateBackupImportProgressActionType = ReadonlyDeep<{
 
 export type InstallerActionType = ReadonlyDeep<
   | StartInstallerActionType
+  | StopInstallerActionType
   | SetProvisioningUrlActionType
   | SetQRCodeErrorActionType
   | SetErrorActionType
@@ -160,6 +166,7 @@ export type InstallerActionType = ReadonlyDeep<
 
 export const actions = {
   startInstaller,
+  stopInstaller,
   finishInstall,
   updateBackupImportProgress,
   retryBackupImport,
@@ -171,6 +178,30 @@ export const actions = {
 export const useInstallerActions = (): BoundActionCreatorsMapObject<
   typeof actions
 > => useBoundActions(actions);
+
+function stopInstaller(): ThunkAction<
+  void,
+  RootStateType,
+  unknown,
+  StopInstallerActionType
+> {
+  return (_dispatch, getState) => {
+    const state = getState().installer;
+
+    if (state.step !== InstallScreenStep.QrCodeNotScanned) {
+      return;
+    }
+
+    cancelByBaton.get(state.baton)?.();
+    cancelByBaton.delete(state.baton);
+    pendingFinishInstallByBaton.delete(state.baton);
+    provisioner?.reset();
+
+    _dispatch({
+      type: STOP_INSTALLER,
+    });
+  };
+}
 
 function startInstaller(): ThunkAction<
   void,
@@ -482,6 +513,16 @@ export function reducer(
   state: Readonly<InstallerStateType> = getEmptyState(),
   action: Readonly<InstallerActionType>
 ): InstallerStateType {
+  if (action.type === STOP_INSTALLER) {
+    if (state.step !== InstallScreenStep.QrCodeNotScanned) {
+      return state;
+    }
+
+    return {
+      step: InstallScreenStep.NotStarted,
+    };
+  }
+
   if (action.type === START_INSTALLER) {
     // Abort previous install
     if (state.step === InstallScreenStep.QrCodeNotScanned) {

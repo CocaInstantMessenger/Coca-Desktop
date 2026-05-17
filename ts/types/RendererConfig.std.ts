@@ -37,6 +37,7 @@ export const rendererConfigSchema = z.object({
   cdnUrl3: configRequiredStringSchema,
   challengeUrl: configRequiredStringSchema,
   certificateAuthority: configRequiredStringSchema,
+  callHistoryRetentionDays: z.number().optional(),
   contentProxyUrl: configRequiredStringSchema,
   crashDumpsPath: configRequiredStringSchema,
   ciMode: z.enum(['full', 'benchmark']).or(z.literal(false)),

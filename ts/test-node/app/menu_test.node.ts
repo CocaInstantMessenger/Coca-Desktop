@@ -280,6 +280,10 @@ describe('createTemplate', () => {
               submenu: [
                 { label: 'Set Up as New Device', click: setupAsNewDevice },
                 { type: 'separator' },
+                {
+                  label: 'Set Up as Standalone Device',
+                  click: setupAsStandalone,
+                },
                 ...menuItem.submenu,
               ],
             };

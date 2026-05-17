@@ -86,6 +86,7 @@ type PropsType = {
   renderCallingParticipantMenu: (
     props: SmartCallingParticipantMenuProps
   ) => JSX.Element;
+  onFocusPresenter?: () => void;
   onClickRaisedHand?: () => void;
 };
 
@@ -138,6 +139,7 @@ export function GroupCallRemoteParticipants({
   setGroupCallVideoRequest,
   remoteAudioLevels,
   renderCallingParticipantMenu,
+  onFocusPresenter,
   onClickRaisedHand,
 }: PropsType): JSX.Element {
   const [gridDimensions, setGridDimensions] = useState<Dimensions>({
@@ -146,6 +148,9 @@ export function GroupCallRemoteParticipants({
   });
 
   const [pageIndex, setPageIndex] = useState(0);
+  const [selectedPresenterDemuxId, setSelectedPresenterDemuxId] = useState<
+    number | undefined
+  >();
 
   const devicePixelRatio = useDevicePixelRatio();
 
@@ -175,9 +180,29 @@ export function GroupCallRemoteParticipants({
     maxGridHeight / (minRenderedHeight + PARTICIPANT_MARGIN)
   );
 
-  // 2. Sort the participants in priority order:  by `presenting` first, since presenters
-  //   should be on the main grid, then by `speakerTime` so that the most recent speakers
-  //   are next in line for the first pages of the grid
+  const presentingParticipants = useMemo(
+    () => remoteParticipants.filter(participant => participant.presenting),
+    [remoteParticipants]
+  );
+
+  useEffect(() => {
+    if (!presentingParticipants.length) {
+      setSelectedPresenterDemuxId(undefined);
+      return;
+    }
+
+    if (
+      selectedPresenterDemuxId == null ||
+      !presentingParticipants.some(
+        participant => participant.demuxId === selectedPresenterDemuxId
+      )
+    ) {
+      setSelectedPresenterDemuxId(presentingParticipants[0]?.demuxId);
+    }
+  }, [presentingParticipants, selectedPresenterDemuxId]);
+
+  // 2. Sort the participants in priority order: by the selected presenter first, then
+  //   any other presenters, then by `speakerTime` so that recent speakers are next.
   const prioritySortedParticipants: Array<GroupCallRemoteParticipantType> =
     useMemo(
       () =>
@@ -185,10 +210,12 @@ export function GroupCallRemoteParticipants({
           .concat()
           .sort(
             (a, b) =>
+              Number(b.demuxId === selectedPresenterDemuxId) -
+                Number(a.demuxId === selectedPresenterDemuxId) ||
               Number(b.presenting || 0) - Number(a.presenting || 0) ||
               (b.speakerTime || -Infinity) - (a.speakerTime || -Infinity)
           ),
-      [remoteParticipants]
+      [remoteParticipants, selectedPresenterDemuxId]
     );
 
   // 3. Layout the participants on each page. The general algorithm is: first, try to fill
@@ -301,6 +328,14 @@ export function GroupCallRemoteParticipants({
   const prevPage = () => {
     setPageIndex(index => Math.max(0, index - 1));
   };
+
+  const focusPresenter = useCallback(
+    (demuxId: number) => {
+      setSelectedPresenterDemuxId(demuxId);
+      onFocusPresenter?.();
+    },
+    [onFocusPresenter]
+  );
 
   // 5. Lay out the current page on the screen.
   const gridParticipantHeight = Math.round(
@@ -501,6 +536,21 @@ export function GroupCallRemoteParticipants({
   return (
     <div className="module-ongoing-call__participants">
       <div className="module-ongoing-call__participants__grid--wrapper">
+        {presentingParticipants.length > 1 && isInSpeakerView ? (
+          <div className="module-ongoing-call__participants__presentation-switcher">
+            {presentingParticipants.map(participant => (
+              <button
+                aria-pressed={participant.demuxId === selectedPresenterDemuxId}
+                className="module-ongoing-call__participants__presentation-switcher__button"
+                key={participant.demuxId}
+                onClick={() => focusPresenter(participant.demuxId)}
+                type="button"
+              >
+                {participant.title}
+              </button>
+            ))}
+          </div>
+        ) : null}
         <SizeObserver
           onSizeChange={size => {
             if (size.hidden) {
@@ -554,6 +604,7 @@ export function GroupCallRemoteParticipants({
           i18n={i18n}
           isCallReconnecting={isCallReconnecting}
           joinedAt={joinedAt}
+          onClickParticipant={focusPresenter}
           onClickRaisedHand={onClickRaisedHand}
           onParticipantVisibilityChanged={onParticipantVisibilityChanged}
           overflowedParticipants={overflowedParticipants}

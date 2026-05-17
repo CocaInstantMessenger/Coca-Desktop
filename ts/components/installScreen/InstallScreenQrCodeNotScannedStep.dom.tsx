@@ -44,6 +44,7 @@ export type PropsType = Readonly<{
   retryGetQrCode: () => void;
   startUpdate: () => void;
   forceUpdate: () => void;
+  setUpAsStandalone: () => void;
   isConfirmingDataDeletion: boolean;
   continueInstallWithDataDeletion: () => void;
   restartInstall: () => void;
@@ -66,6 +67,7 @@ export function InstallScreenQrCodeNotScannedStep({
   retryGetQrCode,
   startUpdate,
   forceUpdate,
+  setUpAsStandalone,
   isConfirmingDataDeletion,
   restartInstall,
   continueInstallWithDataDeletion,
@@ -126,9 +128,27 @@ export function InstallScreenQrCodeNotScannedStep({
           {isStaging ? (
             'THIS IS A STAGING DESKTOP'
           ) : (
-            <a target="_blank" rel="noreferrer" href={SUPPORT_PAGE}>
-              {i18n('icu:Install__support-link')}
-            </a>
+            <>
+              <a target="_blank" rel="noreferrer" href={SUPPORT_PAGE}>
+                {i18n('icu:Install__support-link')}
+              </a>
+              <button
+                type="button"
+                className="module-InstallScreenQrCodeNotScannedStep__standalone-card"
+                onClick={setUpAsStandalone}
+              >
+                <span className="module-InstallScreenQrCodeNotScannedStep__standalone-card__eyebrow">
+                  No phone link needed
+                </span>
+                <span className="module-InstallScreenQrCodeNotScannedStep__standalone-card__title">
+                  Set up this desktop as a standalone device
+                </span>
+                <span className="module-InstallScreenQrCodeNotScannedStep__standalone-card__body">
+                  Create and use a Coca account directly on this desktop
+                  instead of linking a phone.
+                </span>
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -317,6 +337,11 @@ function QRCodeImage({
     setIsCopying(true);
   }, [link]);
 
+  const onCopyLinkCode = useCallback(() => {
+    drop(navigator.clipboard.writeText(link));
+    setIsCopying(true);
+  }, [link]);
+
   useEffect(() => {
     if (!isCopying) {
       return noop;
@@ -324,26 +349,38 @@ function QRCodeImage({
 
     const timer = setTimeout(() => {
       setIsCopying(false);
-    }, 250);
+    }, 1500);
 
     return () => clearTimeout(timer);
   }, [isCopying]);
 
   return (
-    <svg
-      role="img"
-      aria-label={i18n('icu:Install__scan-this-code')}
-      className={classNames(
-        getQrCodeClassName('__code'),
-        isCopying && getQrCodeClassName('__code--copying')
-      )}
-      onDoubleClick={onDoubleClick}
-      viewBox="0 0 16 16"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <BrandedQRCode size={16} link={link} color="black" />
-    </svg>
+    <>
+      <svg
+        role="img"
+        aria-label={i18n('icu:Install__scan-this-code')}
+        className={classNames(
+          getQrCodeClassName('__code'),
+          isCopying && getQrCodeClassName('__code--copying')
+        )}
+        onDoubleClick={onDoubleClick}
+        viewBox="0 0 16 16"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <BrandedQRCode size={16} link={link} color="black" />
+      </svg>
+      <button
+        aria-label={i18n('icu:Install__copy-link-code')}
+        className={getQrCodeClassName('__copy-link-code')}
+        onClick={onCopyLinkCode}
+        type="button"
+      >
+        {isCopying
+          ? i18n('icu:Install__copy-link-code--copied')
+          : i18n('icu:Install__copy-link-code')}
+      </button>
+    </>
   );
 }
 

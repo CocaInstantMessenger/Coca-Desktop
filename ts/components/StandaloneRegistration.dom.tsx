@@ -25,6 +25,25 @@ import type {
   SaveAvatarToDiskActionType,
 } from '../types/Avatar.std.ts';
 
+function StandaloneStageHeader({
+  eyebrow,
+  title,
+  subtitle,
+}: {
+  eyebrow: string;
+  title: string;
+  subtitle: string;
+}): JSX.Element {
+  return (
+    <>
+      <div className="banner-image module-splash-screen__logo module-img--128" />
+      <div className="StandaloneRegistration__eyebrow">{eyebrow}</div>
+      <div className="header">{title}</div>
+      <div className="StandaloneRegistration__subtitle">{subtitle}</div>
+    </>
+  );
+}
+
 function PhoneInput({
   initialValue,
   onValidation,
@@ -96,11 +115,11 @@ function PhoneInput({
   }, [validateNumber]);
 
   return (
-    <div className="phone-input">
+    <div className="phone-input StandaloneRegistration__phone-input">
       <div className="phone-input-form">
         <div className={`number-container ${isValid ? 'valid' : 'invalid'}`}>
           <input
-            className="number"
+            className="number StandaloneRegistration__input"
             type="tel"
             ref={onRef}
             onChange={onChange}
@@ -135,11 +154,13 @@ type StageData =
     };
 
 function PhoneNumberStage({
+  i18n: _i18n,
   initialNumber,
   getCaptchaToken,
   requestVerification,
   onNext,
 }: {
+  i18n: LocalizerType;
   initialNumber: string | undefined;
   getCaptchaToken: () => Promise<string>;
   requestVerification: (
@@ -209,20 +230,24 @@ function PhoneNumberStage({
 
   return (
     <div className="step-body">
-      <div className="banner-image module-splash-screen__logo module-img--128" />
-      <div className="header">Create your Signal Account</div>
-
-      <div>
-        <div className="phone-input-form">
-          <PhoneInput
-            initialValue={initialNumber}
-            onValidation={setIsValidNumber}
-            onNumberChange={setNumber}
-          />
-        </div>
+      <StandaloneStageHeader
+        eyebrow="Standalone setup"
+        title="Create your Coca account"
+        subtitle="Use this desktop as its own device. Enter your phone number to get a verification code."
+      />
+      <div className="StandaloneRegistration__body-copy">
+        Your account will live directly on this desktop instead of linking to a
+        phone.
+      </div>
+      <div className="phone-input-form">
+        <PhoneInput
+          initialValue={initialNumber}
+          onValidation={setIsValidNumber}
+          onNumberChange={setNumber}
+        />
       </div>
       <div className="StandaloneRegistration__error">{error}</div>
-      <div className="clearfix">
+      <div className="StandaloneRegistration__actions">
         <button
           type="button"
           className="button"
@@ -233,25 +258,29 @@ function PhoneNumberStage({
         </button>
         <button
           type="button"
-          className="link"
-          tabIndex={-1}
+          className="button button--secondary"
           disabled={!isValidNumber}
           onClick={onVoiceClick}
         >
-          Call
+          Call me instead
         </button>
+      </div>
+      <div className="StandaloneRegistration__footnote">
+        Standard messaging verification rates may apply.
       </div>
     </div>
   );
 }
 
 function VerificationCodeStage({
+  i18n: _i18n,
   number,
   sessionId,
   registerSingleDevice,
   onNext,
   onBack,
 }: {
+  i18n: LocalizerType;
   number: string;
   sessionId: string;
   registerSingleDevice: (
@@ -317,11 +346,16 @@ function VerificationCodeStage({
   return (
     <>
       <div className="step-body">
-        <div className="banner-image module-splash-screen__logo module-img--128" />
-        <div className="header">Create your Signal Account</div>
+        <StandaloneStageHeader
+          eyebrow="Verification"
+          title="Enter your verification code"
+          subtitle={`We sent a 6-digit code to ${number}.`}
+        />
 
         <input
-          className={`form-control ${isValidCode ? 'valid' : 'invalid'}`}
+          className={`form-control StandaloneRegistration__input ${
+            isValidCode ? 'valid' : 'invalid'
+          }`}
           type="text"
           dir="auto"
           pattern="\s*[0-9]{3}-?[0-9]{3}\s*"
@@ -333,8 +367,12 @@ function VerificationCodeStage({
         />
         <div className="StandaloneRegistration__error">{error}</div>
       </div>
-      <div className="nav">
-        <button type="button" className="button" onClick={onBackClick}>
+      <div className="nav StandaloneRegistration__actions">
+        <button
+          type="button"
+          className="button button--secondary"
+          onClick={onBackClick}
+        >
           Back
         </button>
         <button
@@ -343,7 +381,7 @@ function VerificationCodeStage({
           disabled={!isValidCode}
           onClick={onVerifyCode}
         >
-          Register
+          Continue
         </button>
       </div>
     </>
@@ -419,8 +457,11 @@ function ProfileNameStage({
   if (isEditingAvatar) {
     return (
       <div className="step-body">
-        <div className="banner-image module-splash-screen__logo module-img--128" />
-        <div className="header">Set up profile avatar</div>
+        <StandaloneStageHeader
+          eyebrow="Profile photo"
+          title="Choose a profile photo"
+          subtitle="Pick the photo people will see when you message them from this desktop."
+        />
         <AvatarEditor
           avatarColor={AvatarColors[0]}
           avatarUrl={undefined}
@@ -447,8 +488,11 @@ function ProfileNameStage({
   return (
     <>
       <div className="step-body">
-        <div className="banner-image module-splash-screen__logo module-img--128" />
-        <div className="header">Set up profile</div>
+        <StandaloneStageHeader
+          eyebrow="Profile"
+          title="Finish your profile"
+          subtitle="Choose the name and photo people will see."
+        />
         <AvatarPreview
           avatarColor={AvatarColors[0]}
           avatarUrl={undefined}
@@ -467,38 +511,39 @@ function ProfileNameStage({
           }}
         />
         <input
-          className={`form-control ${firstName ? 'valid' : 'invalid'}`}
+          className={`form-control StandaloneRegistration__input ${
+            firstName ? 'valid' : 'invalid'
+          }`}
           type="text"
           dir="auto"
           pattern="\s*[0-9]{3}-?[0-9]{3}\s*"
           title="Enter your first name"
-          placeholder="First Name (Required)"
+          placeholder="First name"
           autoComplete="off"
           value={firstName}
           onChange={onChangeFirstName}
         />
-        &nbsp;
         <input
-          className="form-control"
+          className="form-control StandaloneRegistration__input"
           type="text"
           dir="auto"
           pattern="\s*[0-9]{3}-?[0-9]{3}\s*"
           title="Enter your last name"
-          placeholder="Last Name (Optional)"
+          placeholder="Last name (optional)"
           autoComplete="off"
           value={lastName}
           onChange={onChangeLastName}
         />
         <div className="StandaloneRegistration__error">{error}</div>
       </div>
-      <div className="nav">
+      <div className="nav StandaloneRegistration__actions">
         <button
           type="button"
           className="button"
           disabled={!normalizeProfileName(firstName) || !avatarData}
           onClick={onNextClick}
         >
-          Finish
+          Finish setup
         </button>
       </div>
     </>
@@ -590,6 +635,7 @@ export function StandaloneRegistration({
     body = (
       <PhoneNumberStage
         {...stageData}
+        i18n={i18n}
         getCaptchaToken={getCaptchaToken}
         requestVerification={requestVerification}
         onNext={onPhoneNumber}
@@ -599,6 +645,7 @@ export function StandaloneRegistration({
     body = (
       <VerificationCodeStage
         {...stageData}
+        i18n={i18n}
         registerSingleDevice={registerSingleDevice}
         onNext={onRegistered}
         onBack={onBackToPhoneNumber}
@@ -623,11 +670,13 @@ export function StandaloneRegistration({
   }
 
   return (
-    <div className="full-screen-flow">
+    <div className="full-screen-flow StandaloneRegistration">
       <TitlebarDragArea />
 
       <div className="step">
-        <div className="inner">{body}</div>
+        <div className="inner">
+          <div className="StandaloneRegistration__panel">{body}</div>
+        </div>
       </div>
     </div>
   );

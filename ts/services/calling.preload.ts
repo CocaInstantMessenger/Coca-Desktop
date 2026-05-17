@@ -271,7 +271,14 @@ function getIncomingCallNotification(): boolean {
   return itemStorage.get('incoming-call-notification', true);
 }
 function getAlwaysRelayCalls(): boolean {
-  return itemStorage.get('always-relay-calls', false);
+  return (
+    itemStorage.get('always-relay-calls', false) ||
+    Boolean(window.SignalContext.config.proxyUrl)
+  );
+}
+
+function isProxyModeActive(): boolean {
+  return Boolean(window.SignalContext.config.proxyUrl);
 }
 
 function getPreferredAudioInputDevice(): AudioDevice | undefined {
@@ -2683,6 +2690,13 @@ class CallingClass {
     const call = getOwn(this.#callsLookup, conversationId);
     if (!call) {
       log.warn('Trying to set presenting for a non-existent call');
+      return;
+    }
+
+    if (mediaStream && isProxyModeActive()) {
+      log.warn(
+        'Refusing to start screen sharing while proxy/Tor mode is active'
+      );
       return;
     }
 

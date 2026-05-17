@@ -1254,6 +1254,7 @@ type WritableInterface = {
 
   clearCallHistory: (target: CallLogEventTarget) => ReadonlyArray<string>;
   _removeAllCallHistory: () => void;
+  deleteCallHistoryOlderThan: (timestamp: number) => void;
   markCallHistoryDeleted: (callId: string) => void;
   cleanupCallHistoryMessages: () => void;
   markCallHistoryRead(callId: string): void;

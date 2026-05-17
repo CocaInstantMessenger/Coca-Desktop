@@ -25,6 +25,7 @@ export type PropsType = {
   imageDataCache: RefObject<CallingImageDataCache | null>;
   isCallReconnecting: boolean;
   joinedAt: number | null;
+  onClickParticipant?: (demuxId: number) => void;
   onClickRaisedHand?: () => void;
   onParticipantVisibilityChanged: (
     demuxId: number,
@@ -46,6 +47,7 @@ export function GroupCallOverflowArea({
   i18n,
   isCallReconnecting,
   joinedAt,
+  onClickParticipant,
   onClickRaisedHand,
   onParticipantVisibilityChanged,
   overflowedParticipants,
@@ -137,6 +139,9 @@ export function GroupCallOverflowArea({
             imageDataCache={imageDataCache}
             i18n={i18n}
             audioLevel={remoteAudioLevels.get(remoteParticipant.demuxId) ?? 0}
+            onClickParticipant={
+              remoteParticipant.presenting ? onClickParticipant : undefined
+            }
             onClickRaisedHand={onClickRaisedHand}
             onVisibilityChanged={onParticipantVisibilityChanged}
             width={OVERFLOW_PARTICIPANT_WIDTH}

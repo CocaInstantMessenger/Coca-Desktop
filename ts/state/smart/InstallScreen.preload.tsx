@@ -10,6 +10,7 @@ import { getUpdatesState } from '../selectors/updates.std.ts';
 import { getInstallerState } from '../selectors/installer.std.ts';
 import { useInstallerActions } from '../ducks/installer.preload.ts';
 import { useUpdatesActions } from '../ducks/updates.preload.ts';
+import { useAppActions } from '../ducks/app.preload.ts';
 import { hasExpired as hasExpiredSelector } from '../selectors/expiration.dom.ts';
 import { missingCaseError } from '../../util/missingCaseError.std.ts';
 import { backupsService } from '../../services/backups/index.preload.ts';
@@ -30,14 +31,24 @@ export const SmartInstallScreen = memo(function SmartInstallScreen() {
   const i18n = useSelector(getIntl);
   const installerState = useSelector(getInstallerState);
   const updates = useSelector(getUpdatesState);
-  const { continueInstallWithDataDeletion, startInstaller, retryBackupImport } =
-    useInstallerActions();
+  const {
+    continueInstallWithDataDeletion,
+    startInstaller,
+    retryBackupImport,
+    stopInstaller,
+  } = useInstallerActions();
+  const { openStandalone } = useAppActions();
   const { startUpdate, forceUpdate } = useUpdatesActions();
   const hasExpired = useSelector(hasExpiredSelector);
 
   const onCancelBackupImport = useCallback((): void => {
     backupsService.cancelDownloadAndImport();
   }, []);
+
+  const onSetUpAsStandalone = useCallback((): void => {
+    stopInstaller();
+    openStandalone();
+  }, [openStandalone, stopInstaller]);
 
   let props: PropsType;
 
@@ -63,6 +74,7 @@ export const SmartInstallScreen = memo(function SmartInstallScreen() {
           continueInstallWithDataDeletion,
           OS: OS.getName(),
           isStaging: isStagingServer(),
+          setUpAsStandalone: onSetUpAsStandalone,
         },
       };
       break;

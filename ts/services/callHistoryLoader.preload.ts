@@ -4,12 +4,19 @@
 import { DataReader, DataWriter } from '../sql/Client.preload.ts';
 import type { CallHistoryDetails } from '../types/CallDisposition.std.ts';
 import { strictAssert } from '../util/assert.std.ts';
+import * as durations from '../util/durations/index.std.ts';
 
 let callsHistoryData: ReadonlyArray<CallHistoryDetails>;
 let callsHistoryUnreadCount: number;
 
 export async function loadCallHistory(): Promise<void> {
   await DataWriter.cleanupCallHistoryMessages();
+  const retentionDays = window.SignalContext.config.callHistoryRetentionDays;
+  if (retentionDays != null) {
+    await DataWriter.deleteCallHistoryOlderThan(
+      Date.now() - retentionDays * durations.DAY
+    );
+  }
   callsHistoryData = await DataReader.getAllCallHistory();
   callsHistoryUnreadCount = await DataReader.getCallHistoryUnreadCount();
 }

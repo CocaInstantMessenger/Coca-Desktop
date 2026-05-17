@@ -646,6 +646,32 @@ $secondary-text-color: light-dark(
   @include mixins.localized-fonts;
 }
 
+.Preferences__text-input {
+  @include mixins.light-theme {
+    background-color: variables.$color-white;
+    border: 1px solid variables.$color-gray-25;
+    color: variables.$color-gray-90;
+  }
+
+  @include mixins.dark-theme {
+    background-color: variables.$color-gray-95;
+    border: 1px solid variables.$color-gray-45;
+    color: variables.$color-gray-05;
+  }
+
+  border-radius: 10px;
+  box-sizing: border-box;
+  min-height: 44px;
+  padding: 10px 12px;
+  width: 100%;
+}
+
+.Preferences__error-text {
+  @include mixins.font-body-2;
+  color: variables.$color-accent-red;
+  margin-top: 8px;
+}
+
 .Preferences__LanguageModal {
   height: 560px;
   .module-Modal__body {

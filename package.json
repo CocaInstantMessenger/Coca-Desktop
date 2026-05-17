@@ -1,10 +1,10 @@
 {
   "$schema": "./package.schema.json",
   "packageManager": "pnpm@10.18.1",
-  "name": "signal-desktop",
-  "productName": "Signal",
+  "name": "coca-desktop",
+  "productName": "Coca",
   "description": "Private messaging from your desktop",
-  "desktopName": "signal.desktop",
+  "desktopName": "coca.desktop",
   "repository": "https://github.com/signalapp/Signal-Desktop.git",
   "version": "8.13.0-alpha.1",
   "license": "AGPL-3.0-only",
@@ -388,7 +388,7 @@
     "node": "24.15.0"
   },
   "build": {
-    "appId": "org.whispersystems.signal-desktop",
+    "appId": "org.coca.desktop",
     "nativeRebuilder": "parallel",
     "mac": {
       "artifactName": "${name}-mac-${arch}-${version}.${ext}",
@@ -464,8 +464,8 @@
       "preAutoEntitlements": false,
       "extendInfo": {
         "ElectronTeamID": "U68MSDN6DR",
-        "NSCameraUsageDescription": "Signal uses your camera for video calling.",
-        "NSMicrophoneUsageDescription": "Signal uses your microphone for voice and video calling."
+        "NSCameraUsageDescription": "Coca uses your camera for video calling.",
+        "NSMicrophoneUsageDescription": "Coca uses your microphone for voice and video calling."
       }
     },
     "win": {
@@ -517,11 +517,11 @@
       }
     },
     "linux": {
-      "executableName": "signal-desktop",
+      "executableName": "coca-desktop",
       "category": "Network;InstantMessaging;Chat",
       "desktop": {
         "entry": {
-          "StartupWMClass": "signal"
+          "StartupWMClass": "coca"
         }
       },
       "artifactName": "${name}_${version}_${arch}.${ext}",

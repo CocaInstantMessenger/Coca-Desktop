@@ -156,13 +156,16 @@ export function ContactModal({
     SubModalState.None
   );
   const modalTheme = getThemeByThemeType(theme);
+  const callingDisabledByProxy = Boolean(
+    window.SignalContext.config.proxyUrl
+  );
 
   const renderQuickActions = useCallback(
     (conversationId: string) => {
-      const inAnotherCallTooltipContent = hasActiveCall
+      const inAnotherCallTooltipContent = hasActiveCall || callingDisabledByProxy
         ? getTooltipContent(i18n)
         : undefined;
-      const discouraged = hasActiveCall;
+      const discouraged = hasActiveCall || callingDisabledByProxy;
 
       const videoCallButton = (
         <Button
@@ -171,6 +174,9 @@ export function ContactModal({
           discouraged={discouraged}
           aria-label={inAnotherCallTooltipContent}
           onClick={() => {
+            if (callingDisabledByProxy) {
+              return;
+            }
             hideContactModal();
             onOutgoingVideoCallInConversation(conversationId);
           }}
@@ -185,6 +191,9 @@ export function ContactModal({
           discouraged={discouraged}
           aria-label={inAnotherCallTooltipContent}
           onClick={() => {
+            if (callingDisabledByProxy) {
+              return;
+            }
             hideContactModal();
             onOutgoingAudioCallInConversation(conversationId);
           }}
