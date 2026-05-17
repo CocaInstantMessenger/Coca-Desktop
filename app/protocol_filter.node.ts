@@ -47,9 +47,11 @@ export function _urlToPath(
 
   // We generally expect URLs to start with file:// or file:/// here, but for users with
   //   their home directory redirected to a UNC share, it will start with //.
-  const withoutScheme = decoded.startsWith('//')
-    ? decoded
-    : decoded.slice(options?.isWindows ? 8 : 7);
+  let withoutScheme = decoded;
+  if (!decoded.startsWith('//')) {
+    const schemeLength = options?.isWindows ? 8 : 7;
+    withoutScheme = decoded.slice(schemeLength);
+  }
 
   const withoutQuerystring = _eliminateAllAfterCharacter(withoutScheme, '?');
 
