@@ -238,6 +238,7 @@ export function ContactModal({
     },
     [
       hasActiveCall,
+      callingDisabledByProxy,
       hideContactModal,
       i18n,
       isInFullScreenCall,
