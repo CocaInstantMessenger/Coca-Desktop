@@ -1,5 +1,6 @@
 // Copyright 2025 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
+// @knipignore Loaded via window-specific entrypoints.
 
 import { memo, useEffect, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
