@@ -7,13 +7,13 @@
 .module-message-detail {
   max-width: 650px;
   margin-inline: auto;
-  padding: 20px;
+  padding-block: 20px;
+  padding-inline: 20px;
   outline: none;
 }
 
 .module-message-detail__message-container {
-  padding-top: 20px;
-  padding-bottom: 20px;
+  padding-block: 20px;
 
   &::after {
     content: '.';
@@ -181,7 +181,8 @@
 .module-message-detail__contact__show-safety-number {
   @include mixins.button-reset;
   & {
-    padding: 4px;
+    padding-block: 4px;
+    padding-inline: 4px;
     border-radius: 4px;
     color: variables.$color-white;
   }
@@ -198,7 +199,8 @@
   & {
     margin-inline-start: 5px;
     margin-top: 5px;
-    padding: 4px;
+    padding-block: 4px;
+    padding-inline: 4px;
     border-radius: 4px;
 
     color: variables.$color-white;
