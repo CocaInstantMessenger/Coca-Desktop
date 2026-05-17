@@ -6,7 +6,8 @@
 
 .base {
   width: 380px;
-  padding: 4px;
+  padding-block: 4px;
+  padding-inline: 4px;
   display: flex;
   flex-direction: row;
   border-radius: 8px;

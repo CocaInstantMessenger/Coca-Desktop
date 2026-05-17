@@ -44,7 +44,11 @@ export function PlaybackRateButton({
     {
       immediate: reducedMotion,
       config: SPRING_CONFIG,
-      to: isDown ? { scale: 1.3 } : { scale: visible ? 1 : 0 },
+      to: isDown
+        ? { scale: 1.3 }
+        : {
+            scale: visible ? 1 : 0,
+          },
     },
     [visible, isDown]
   );

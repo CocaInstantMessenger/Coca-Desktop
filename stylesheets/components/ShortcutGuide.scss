@@ -6,7 +6,8 @@
 
 .module-shortcut-guide {
   border-radius: 4px;
-  padding: 16px;
+  padding-block: 16px;
+  padding-inline: 16px;
 
   max-height: calc(100vh - 40px);
   max-width: 600px;
@@ -139,7 +140,8 @@
   display: inline-block;
 
   border-radius: 2px;
-  padding: 3px;
+  padding-block: 3px;
+  padding-inline: 3px;
   padding-inline: 8px;
   margin-inline-start: 4px;
 
@@ -167,7 +169,8 @@
   inset-inline: 0;
   bottom: 0;
 
-  padding: 20px;
+  padding-block: 20px;
+  padding-inline: 20px;
 
   display: flex;
   flex-direction: row;
