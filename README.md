@@ -27,6 +27,6 @@ Licensed under the GNU AGPLv3: https://www.gnu.org/licenses/agpl-3.0.html
 
 ## Legal Notice
 
-This project is *NOT* affiliated with Signal Messenger or the Signal Foundation.
+This project is _NOT_ affiliated with Signal Messenger or the Signal Foundation.
 
 The software is developed independently and provided as-is, without warranties of any kind. Use at your own risk.

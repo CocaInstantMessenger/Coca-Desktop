@@ -61,9 +61,10 @@ jobs:
           - metric: backup
             script: ts/test-mock/benchmarks/backup_bench.node.js
 
-    runs-on: ubuntu-22.04-8-cores
+    runs-on: ubuntu-22.04
     if: ${{ github.repository == 'signalapp/Signal-Desktop-Private' && (!github.event.schedule || github.ref == 'refs/heads/main') }}
     timeout-minutes: 30
+    
 
     steps:
     - name: Get system specs

@@ -962,9 +962,7 @@ function OutgoingCallButtons({
   | 'onOutgoingVideoCall'
   | 'outgoingCallButtonStyle'
 >): JSX.Element | null {
-  const callingDisabledByProxy = Boolean(
-    window.SignalContext.config.proxyUrl
-  );
+  const callingDisabledByProxy = Boolean(window.SignalContext.config.proxyUrl);
   const disabled =
     conversation.type === 'group' &&
     ((conversation.announcementsOnly && !conversation.areWeAdmin) ||

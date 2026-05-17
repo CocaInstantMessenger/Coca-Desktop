@@ -144,8 +144,8 @@ export function InstallScreenQrCodeNotScannedStep({
                   Set up this desktop as a standalone device
                 </span>
                 <span className="module-InstallScreenQrCodeNotScannedStep__standalone-card__body">
-                  Create and use a Coca account directly on this desktop
-                  instead of linking a phone.
+                  Create and use a Coca account directly on this desktop instead
+                  of linking a phone.
                 </span>
               </button>
             </>

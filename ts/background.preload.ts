@@ -195,9 +195,7 @@ import {
   onSuccessfulDecrypt,
 } from './util/handleRetry.preload.ts';
 import { themeChanged } from './shims/themeChanged.dom.ts';
-import {
-  createIPCEvents,
-} from './util/createIPCEvents.preload.ts';
+import { createIPCEvents } from './util/createIPCEvents.preload.ts';
 import type { ServiceIdString } from './types/ServiceId.std.ts';
 import {
   ServiceIdKind,
