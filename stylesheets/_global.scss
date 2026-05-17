@@ -645,7 +645,8 @@ $loading-height: 16px;
     .StandaloneRegistration__panel {
       width: min(560px, calc(100vw - 40px));
       border-radius: 24px;
-      padding: 32px 28px 24px;
+      padding-block: 32px 24px;
+      padding-inline: 28px;
       box-shadow:
         0 24px 60px variables.$color-black-alpha-20,
         inset 0 1px 0 variables.$color-white-alpha-80;
@@ -667,7 +668,8 @@ $loading-height: 16px;
     .banner-image {
       display: inline-block;
       height: 96px;
-      margin: 0 auto 6px;
+      margin-block: 0 6px;
+      margin-inline: auto;
       width: 96px;
     }
 
@@ -701,7 +703,8 @@ $loading-height: 16px;
       width: 100%;
       border: 1px solid variables.$color-gray-25;
       border-radius: 14px;
-      padding: 14px 16px;
+      padding-block: 14px;
+      padding-inline: 16px;
       margin: 0;
       text-align: start;
       background: variables.$color-white;
@@ -726,7 +729,8 @@ $loading-height: 16px;
       min-width: 0;
       margin: 0;
       border-radius: 14px;
-      padding: 14px 18px;
+      padding-block: 14px;
+      padding-inline: 18px;
       box-shadow: 0 10px 24px variables.$color-black-alpha-20;
       font-size: 13pt;
       font-weight: 600;
