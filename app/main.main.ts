@@ -1228,9 +1228,7 @@ async function applyConfiguredProxyToSession(): Promise<void> {
 }
 
 function applyConfiguredWebRTCPolicy(window: BrowserWindow): void {
-  const policy = getResolvedProxyUrl()
-    ? 'disable_non_proxied_udp'
-    : 'default';
+  const policy = getResolvedProxyUrl() ? 'disable_non_proxied_udp' : 'default';
 
   window.webContents.setWebRTCIPHandlingPolicy(policy);
 }
