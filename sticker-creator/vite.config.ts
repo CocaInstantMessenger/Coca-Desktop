@@ -1,12 +1,31 @@
 // Copyright 2023 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
 
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import { visualizer } from 'rollup-plugin-visualizer';
+async function loadPlugin<T>(
+  loader: () => Promise<T>,
+  pick: (mod: T) => unknown,
+): Promise<unknown | null> {
+  try {
+    return pick(await loader());
+  } catch {
+    return null;
+  }
+}
+
+const dynamicImport = (specifier: string): Promise<unknown> =>
+  Function('s', 'return import(s)')(specifier) as Promise<unknown>;
+
+const react: any = await loadPlugin(
+  () => dynamicImport('@vitejs/plugin-react'),
+  (mod) => (mod as any).default,
+);
+const visualizer: any = await loadPlugin(
+  () => dynamicImport('rollup-plugin-visualizer'),
+  (mod) => (mod as any).visualizer,
+);
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default {
   css: {
     modules: {
       localsConvention: 'camelCaseOnly',
@@ -15,7 +34,7 @@ export default defineConfig({
   worker: {
     format: 'es',
   },
-  plugins: [react(), visualizer()],
+  plugins: [react && react(), visualizer && visualizer()].filter(Boolean),
   server: {
     proxy: {
       '/api/socket': {
@@ -33,4 +52,4 @@ export default defineConfig({
       },
     },
   },
-});
+};

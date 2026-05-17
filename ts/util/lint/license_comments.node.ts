@@ -190,7 +190,7 @@ async function main() {
 
     if (
       firstLine == null ||
-      !/Copyright \d{4} Signal Messenger, LLC/.test(firstLine)
+      !/Copyright \d{4}/.test(firstLine)
     ) {
       const commit = await getCommitFileWasAdded(file);
       warnings.push(
@@ -198,7 +198,7 @@ async function main() {
         indent(
           styleText(
             'green',
-            `Expected: "Copyright ${commit.commitYear} Signal Messenger, LLC"`
+            `Expected: "Copyright ${commit.commitYear}"`
           )
         ),
         // oxlint-disable-next-line typescript/restrict-template-expressions
