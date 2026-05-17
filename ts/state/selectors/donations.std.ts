@@ -1,6 +1,5 @@
 // Copyright 2026 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
-// @knipignore Used by runtime-specific smart components.
 
 import { createSelector } from 'reselect';
 import type { ReadonlyDeep } from 'type-fest';

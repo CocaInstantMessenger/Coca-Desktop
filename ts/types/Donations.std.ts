@@ -1,6 +1,5 @@
 // Copyright 2025 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
-// @knipignore Shared donation constants are consumed across runtime boundaries.
 
 import { z } from 'zod';
 

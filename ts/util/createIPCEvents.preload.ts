@@ -1,6 +1,5 @@
 // Copyright 2020 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
-// @knipignore This preload helper is called through generated IPC wiring.
 
 import { ipcRenderer } from 'electron';
 import type { SystemPreferences } from 'electron';

@@ -1,6 +1,5 @@
 // Copyright 2025 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
-// @knipignore Intentionally imported from runtime-specific entrypoints.
 import type { ReactNode, ErrorInfo, JSX } from 'react';
 import { Component, useCallback } from 'react';
 import { createLogger } from '../logging/log.std.ts';

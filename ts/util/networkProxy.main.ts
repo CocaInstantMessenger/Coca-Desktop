@@ -1,6 +1,5 @@
 // Copyright 2026 Signal Messenger, LLC
 // SPDX-License-Identifier: AGPL-3.0-only
-// @knipignore Exposed through main-process consumers and electron entrypoints.
 
 import { userConfig } from '../../app/user_config.main.ts';
 import {
