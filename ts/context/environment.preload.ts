@@ -3,15 +3,21 @@
 
 import { config } from './config.preload.ts';
 import {
+  Environment,
   getEnvironment,
   parseEnvironment,
   setEnvironment,
 } from '../environment.std.ts';
 
-setEnvironment(
-  parseEnvironment(config.environment),
-  config.isMockTestEnvironment
-);
+if (
+  process.env.NODE_ENV !== 'test' &&
+  getEnvironment() !== Environment.Test
+) {
+  setEnvironment(
+    parseEnvironment(config.environment),
+    config.isMockTestEnvironment
+  );
+}
 
 const environment = getEnvironment();
 

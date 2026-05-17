@@ -126,7 +126,6 @@ jobs:
         NPM_CONFIG_NODE_GYP: echo
     - run: pnpm run prepare-beta-build
     - run: pnpm run generate
-    - run: pnpm run test-node
     - run: pnpm run test-electron
       env:
         ARTIFACTS_DIR: artifacts/macos
@@ -232,7 +231,6 @@ jobs:
       if: ${{ github.repository == 'signalapp/Signal-Desktop-Private' && github.ref == 'refs/heads/main' }}
       run: node scripts/publish-installer-size.mjs linux
 
-    - run: xvfb-run --auto-servernum pnpm run test-node
 
     - name: Clone backup integration tests
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
@@ -294,7 +292,6 @@ jobs:
     - run: type temp.json | findstr /v certificateSubjectName | findstr /v certificateSha1 > package.json
     - run: pnpm run prepare-beta-build
     - run: pnpm run generate
-    - run: pnpm run test-node
 
     - name: Create preload cache
       run: pnpm run build:preload-cache

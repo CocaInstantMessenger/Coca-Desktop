@@ -5,7 +5,12 @@ import '../sandboxedInit.dom.ts';
 import { CallingScreenSharingController } from '../../components/CallingScreenSharingController.dom.tsx';
 import { strictAssert } from '../../util/assert.std.ts';
 import { drop } from '../../util/drop.std.ts';
-import { parseEnvironment, setEnvironment } from '../../environment.std.ts';
+import {
+  Environment,
+  getEnvironment,
+  parseEnvironment,
+  setEnvironment,
+} from '../../environment.std.ts';
 import { AppProvider } from '../AppProvider.dom.tsx';
 
 const { ScreenShareWindowProps } = window.Signal;
@@ -13,10 +18,12 @@ const { i18n } = window.SignalContext;
 
 strictAssert(ScreenShareWindowProps, 'window values not provided');
 
-setEnvironment(
-  parseEnvironment(window.SignalContext.getEnvironment()),
-  window.SignalContext.isTestOrMockEnvironment()
-);
+if (getEnvironment() !== Environment.Test) {
+  setEnvironment(
+    parseEnvironment(window.SignalContext.getEnvironment()),
+    window.SignalContext.isTestOrMockEnvironment()
+  );
+}
 
 function onCloseController(): void {
   drop(window.SignalContext.executeMenuRole('close'));

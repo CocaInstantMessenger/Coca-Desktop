@@ -34,6 +34,12 @@ export function getEnvironment(): Environment {
  */
 export function setEnvironment(env: Environment, isMockTestEnv: boolean): void {
   if (environment !== undefined) {
+    if (
+      environment === env &&
+      isMockTestEnvironment === isMockTestEnv
+    ) {
+      return;
+    }
     throw new Error('Environment has already been set');
   }
   environment = env;
