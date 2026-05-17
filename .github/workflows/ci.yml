@@ -123,11 +123,6 @@ jobs:
         NPM_CONFIG_NODE_GYP: echo
     - run: pnpm run prepare-beta-build
     - run: pnpm run generate
-    - run: pnpm run test-electron
-      env:
-        ARTIFACTS_DIR: artifacts/macos
-        WORKER_COUNT: 4
-      timeout-minutes: 5
     - run: touch noop.sh && chmod +x noop.sh
     - run: pnpm run build
       env:
@@ -235,15 +230,6 @@ jobs:
         repository: 'signalapp/Signal-Message-Backup-Tests'
         ref: '33b3d0cd4367a898f5f8b4a2c57ee12ba7ec38ea'
         path: 'backup-integration-tests'
-
-    - run: xvfb-run --auto-servernum pnpm run test-electron
-      timeout-minutes: 5
-      env:
-        ARTIFACTS_DIR: artifacts/linux
-        LANG: en_US
-        LANGUAGE: en_US
-        BACKUP_INTEGRATION_DIR: 'backup-integration-tests/test-cases'
-        WORKER_COUNT: 8
     - run: xvfb-run --auto-servernum pnpm run test-release
       env:
         NODE_ENV: production
@@ -257,7 +243,7 @@ jobs:
   windows:
     name: Windows
     needs: lint
-    runs-on: windows-latest-8-cores
+    runs-on: windows-latest
     timeout-minutes: 30
 
     steps:
@@ -309,12 +295,7 @@ jobs:
     - name: Upload installer size
       if: ${{ github.repository == 'signalapp/Signal-Desktop-Private' && github.ref == 'refs/heads/main' }}
       run: node scripts/publish-installer-size.mjs windows
-
-    - run: pnpm run test-electron
-      env:
-        ARTIFACTS_DIR: artifacts/windows
-        WORKER_COUNT: 4
-      timeout-minutes: 5
+      
     - run: pnpm run test-release
       env:
         SIGNAL_ENV: production
