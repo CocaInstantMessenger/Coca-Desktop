@@ -129,7 +129,8 @@
 
   &--padded {
     .module-Modal__body {
-      padding: 16px;
+      padding-block: 16px;
+      padding-inline: 16px;
 
       // ProfileEditor nests footer within the Modal's body
       .module-Modal__button-footer {
