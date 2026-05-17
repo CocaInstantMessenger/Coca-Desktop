@@ -140,6 +140,11 @@ import { getAppRootDir } from '../ts/util/appRootDir.main.ts';
 import { trackHeapSize } from '../ts/util/oomNotifier.node.ts';
 import { sendDummyKeystroke } from './WindowsNotifications.main.ts';
 import { maybeMigrateSafeStorageBackend } from '../ts/util/linuxPasswordStoreMigration.main.ts';
+import {
+  getElectronProxyRules,
+  getResolvedProxyUrl,
+  getStoredNetworkProxySettings,
+} from '../ts/util/networkProxy.main.ts';
 
 const { chmod, realpath, writeFile } = fsExtra;
 const { get, pick, isNumber, isBoolean, some, debounce, noop } = lodash;
@@ -768,6 +773,7 @@ async function createWindow() {
 
   // Create the browser window.
   mainWindow = new BrowserWindow(windowOptions);
+  applyConfiguredWebRTCPolicy(mainWindow);
   if (settingsChannel) {
     settingsChannel.setMainWindow(mainWindow);
   }
@@ -1202,6 +1208,51 @@ ipc.once('ready-for-updates', readyForUpdates);
 const TEN_MINUTES = 10 * 60 * 1000;
 setTimeout(readyForUpdates, TEN_MINUTES);
 
+async function applyConfiguredProxyToSession(): Promise<void> {
+  const { mode } = getStoredNetworkProxySettings();
+  const proxyUrl = getResolvedProxyUrl();
+  const proxyRules = getElectronProxyRules(proxyUrl);
+
+  if (mode === 'direct') {
+    await session.defaultSession.setProxy({ mode: 'direct' });
+  } else if (!proxyRules) {
+    await session.defaultSession.setProxy({ mode: 'system' });
+  } else {
+    await session.defaultSession.setProxy({
+      mode: 'fixed_servers',
+      proxyRules,
+    });
+  }
+
+  await session.defaultSession.closeAllConnections();
+}
+
+function applyConfiguredWebRTCPolicy(window: BrowserWindow): void {
+  const policy = getResolvedProxyUrl()
+    ? 'disable_non_proxied_udp'
+    : 'default';
+
+  window.webContents.setWebRTCIPHandlingPolicy(policy);
+}
+
+function getCallHistoryRetentionDaysFromEnvironment(): number | undefined {
+  const rawValue = process.env.COCA_CALL_HISTORY_RETENTION_DAYS;
+  if (!rawValue) {
+    return undefined;
+  }
+
+  const value = Number(rawValue);
+  if (!Number.isFinite(value) || value <= 0) {
+    log.warn(
+      'Ignoring invalid COCA_CALL_HISTORY_RETENTION_DAYS value:',
+      rawValue
+    );
+    return undefined;
+  }
+
+  return value;
+}
+
 function openContactUs() {
   drop(shell.openExternal(createSupportUrl({ locale: app.getLocale() })));
 }
@@ -1299,6 +1350,7 @@ async function showScreenShareWindow(sourceName: string | undefined) {
   };
 
   screenShareWindow = new BrowserWindow(options);
+  applyConfiguredWebRTCPolicy(screenShareWindow);
 
   await handleCommonWindowEvents(screenShareWindow);
 
@@ -2053,6 +2105,22 @@ const featuresToDisable = `HardwareMediaKeyHandling,${app.commandLine.getSwitchV
 )}`;
 app.commandLine.appendSwitch('disable-features', featuresToDisable);
 
+function configureChromiumProxyFromSettings(): void {
+  const { mode } = getStoredNetworkProxySettings();
+  const proxyRules = getElectronProxyRules(getResolvedProxyUrl());
+
+  if (mode === 'direct') {
+    app.commandLine.appendSwitch('no-proxy-server');
+    return;
+  }
+
+  if (proxyRules) {
+    app.commandLine.appendSwitch('proxy-server', proxyRules);
+  }
+}
+
+configureChromiumProxyFromSettings();
+
 // This has to run before the 'ready' event.
 electronProtocol.registerSchemesAsPrivileged([
   {
@@ -2081,6 +2149,8 @@ app.on('ready', async () => {
   if (DISABLE_IPV6) {
     dns.setIPv6Enabled(false);
   }
+
+  await applyConfiguredProxyToSession();
 
   const [userDataPath, crashDumpsPath, installPath] = await Promise.all([
     realpath(app.getPath('userData')),
@@ -2309,6 +2379,7 @@ app.on('ready', async () => {
         },
         icon: windowIcon,
       });
+      applyConfiguredWebRTCPolicy(loadingWindow);
 
       loadingWindow.once('ready-to-show', async () => {
         if (!loadingWindow) {
@@ -2889,6 +2960,7 @@ ipc.on('get-config', async event => {
     buildCreation: config.get<number>('buildCreation'),
     buildExpiration: config.get<number>('buildExpiration'),
     challengeUrl: config.get<string>('challengeUrl'),
+    callHistoryRetentionDays: getCallHistoryRetentionDaysFromEnvironment(),
     serverUrl: config.get<string>('serverUrl'),
     storageUrl: config.get<string>('storageUrl'),
     updatesUrl: config.get<string>('updatesUrl'),
@@ -2914,7 +2986,7 @@ ipc.on('get-config', async event => {
     osRelease: os.release(),
     osVersion: os.version(),
     appInstance: process.env.NODE_APP_INSTANCE || undefined,
-    proxyUrl: process.env.HTTPS_PROXY || process.env.https_proxy || undefined,
+    proxyUrl: getResolvedProxyUrl(),
     contentProxyUrl: config.get<string>('contentProxyUrl'),
     sfuUrl: config.get('sfuUrl'),
     reducedMotionSetting: animationSettings.prefersReducedMotion,
@@ -3019,16 +3091,24 @@ const sendPreferencesChangedEventToWindows = () => {
 ipc.on('preferences-changed', sendPreferencesChangedEventToWindows);
 
 const onEphemeralSettingChanged = (name: string) => {
-  if (name !== 'contentProtection') {
-    return;
+  if (name === 'contentProtection') {
+    const contentProtection = ephemeralConfig.get('contentProtection');
+
+    for (const window of activeWindows) {
+      if (typeof contentProtection === 'boolean') {
+        window.setContentProtection(contentProtection);
+      }
+    }
   }
 
-  const contentProtection = ephemeralConfig.get('contentProtection');
-
-  for (const window of activeWindows) {
-    if (typeof contentProtection === 'boolean') {
-      window.setContentProtection(contentProtection);
-    }
+  if (name === 'themeSetting') {
+    const updateBackgroundColor = async (): Promise<void> => {
+      const backgroundColor = await getBackgroundColor();
+      for (const window of activeWindows) {
+        window.setBackgroundColor(backgroundColor);
+      }
+    };
+    drop(updateBackgroundColor());
   }
 };
 

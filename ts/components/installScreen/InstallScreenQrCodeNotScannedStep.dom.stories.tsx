@@ -38,6 +38,7 @@ const DEFAULT_PROPS: Omit<PropsType, 'provisioningUrl'> = {
   forceUpdate: action('forceUpdate'),
   currentVersion: 'v6.0.0',
   retryGetQrCode: action('retryGetQrCode'),
+  setUpAsStandalone: action('setUpAsStandalone'),
   isConfirmingDataDeletion: false,
   restartInstall: action('restartInstall'),
   continueInstallWithDataDeletion: action('continueInstallWithDataDeletion'),

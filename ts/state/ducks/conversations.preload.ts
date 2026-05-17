@@ -1819,19 +1819,6 @@ function setPinned(
   }
 
   if (value) {
-    const pinnedConversationIds = itemStorage.get(
-      'pinnedConversationIds',
-      new Array<string>()
-    );
-
-    if (pinnedConversationIds.length >= 4) {
-      return {
-        type: SHOW_TOAST,
-        payload: {
-          toastType: ToastType.PinnedConversationsFull,
-        },
-      };
-    }
     conversation.pin();
   } else {
     conversation.unpin();

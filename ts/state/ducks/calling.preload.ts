@@ -2205,6 +2205,19 @@ function setOutgoingRing(payload: boolean): SetOutgoingRingActionType {
   };
 }
 
+function isProxyModeActive(): boolean {
+  return Boolean(window.SignalContext.config.proxyUrl);
+}
+
+function assertCallingIsAllowed(): boolean {
+  if (!isProxyModeActive()) {
+    return true;
+  }
+
+  log.warn('Calling is disabled while proxy/Tor mode is active');
+  return false;
+}
+
 function onOutgoingVideoCallInConversation(
   conversationId: string
 ): ThunkAction<
@@ -2219,6 +2232,10 @@ function onOutgoingVideoCallInConversation(
       throw new Error(
         `onOutgoingVideoCallInConversation: No conversation found for conversation ${conversationId}`
       );
+    }
+
+    if (!assertCallingIsAllowed()) {
+      return;
     }
 
     log.info('onOutgoingVideoCallInConversation: about to start a video call');
@@ -2289,6 +2306,10 @@ function onOutgoingAudioCallInConversation(
       throw new Error(
         `onOutgoingAudioCallInConversation: No conversation found for conversation ${conversationId}`
       );
+    }
+
+    if (!assertCallingIsAllowed()) {
+      return;
     }
 
     if (!isDirectConversation(conversation.attributes)) {
@@ -2679,6 +2700,10 @@ function startCallingLobby({
       "startCallingLobby: can't start lobby without a conversation"
     );
 
+    if (!assertCallingIsAllowed()) {
+      return;
+    }
+
     const logId = `startCallingLobby(${getConversationIdForLogging(conversation)})`;
     const { activeCallState } = state.calling;
 
@@ -2780,6 +2805,10 @@ function startCall(
     const { activeCallState } = state.calling;
 
     log.info(`${logId}: starting, mode ${callMode}`);
+
+    if (!assertCallingIsAllowed()) {
+      return;
+    }
 
     if (
       !activeCallState ||

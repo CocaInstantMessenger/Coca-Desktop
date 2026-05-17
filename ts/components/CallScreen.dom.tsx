@@ -446,9 +446,10 @@ export function CallScreen({
   useScreenSharingStoppedToast({ activeCall, i18n });
   useViewModeChangedToast({ activeCall, i18n });
 
-  const currentPresenter = remoteParticipants.find(
+  const currentPresenters = remoteParticipants.filter(
     participant => participant.presenting
   );
+  const currentPresenter = currentPresenters.at(0);
 
   const hasRemoteVideo = remoteParticipants.some(
     remoteParticipant => remoteParticipant.hasRemoteVideo
@@ -763,14 +764,9 @@ export function CallScreen({
 
   const isGroupCall = isGroupOrAdhocActiveCall(activeCall);
 
-  let presentingButtonType: CallingButtonType;
-  if (presentingSource) {
-    presentingButtonType = CallingButtonType.PRESENTING_ON;
-  } else if (currentPresenter) {
-    presentingButtonType = CallingButtonType.PRESENTING_DISABLED;
-  } else {
-    presentingButtonType = CallingButtonType.PRESENTING_OFF;
-  }
+  const presentingButtonType = presentingSource
+    ? CallingButtonType.PRESENTING_ON
+    : CallingButtonType.PRESENTING_OFF;
 
   // Don't call setLocalHandRaised because it only sets local state. Instead call
   // toggleRaiseHand() which will set ringrtc state and call setLocalHandRaised.
@@ -957,6 +953,25 @@ export function CallScreen({
   ]);
 
   let remoteParticipantsElement: ReactNode;
+  let presentingToast: ReactNode = null;
+  if (currentPresenters.length > 1) {
+    presentingToast = (
+      <PersistentCallingToast>
+        {i18n('icu:calling__presenting--multiple-ongoing', {
+          count: currentPresenters.length,
+        })}
+      </PersistentCallingToast>
+    );
+  } else if (currentPresenter) {
+    presentingToast = (
+      <PersistentCallingToast>
+        {i18n('icu:calling__presenting--person-ongoing', {
+          name: currentPresenter.title,
+        })}
+      </PersistentCallingToast>
+    );
+  }
+
   switch (activeCall.callMode) {
     case CallMode.Direct: {
       assertDev(
@@ -1015,6 +1030,7 @@ export function CallScreen({
           remoteAudioLevels={activeCall.remoteAudioLevels}
           renderCallingParticipantMenu={renderCallingParticipantMenu}
           isCallReconnecting={isReconnecting}
+          onFocusPresenter={switchToPresentationView}
           onClickRaisedHand={
             raisedHandsCount > 0
               ? () => setShowRaisedHandsList(true)
@@ -1067,13 +1083,7 @@ export function CallScreen({
         </PersistentCallingToast>
       ) : null}
 
-      {currentPresenter ? (
-        <PersistentCallingToast>
-          {i18n('icu:calling__presenting--person-ongoing', {
-            name: currentPresenter.title,
-          })}
-        </PersistentCallingToast>
-      ) : null}
+      {presentingToast}
 
       {showNeedsScreenRecordingPermissionsWarning ? (
         <NeedsScreenRecordingPermissionsModal

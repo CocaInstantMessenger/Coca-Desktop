@@ -10,6 +10,8 @@ import { userConfig } from '../../app/user_config.main.ts';
 import { ephemeralConfig } from '../../app/ephemeral_config.main.ts';
 import { installPermissionsHandler } from '../../app/permissions.std.ts';
 import { strictAssert } from '../util/assert.std.ts';
+import type { NetworkProxyMode } from '../types/NetworkProxy.std.ts';
+import { isValidProxyUrl } from '../util/networkProxy.main.ts';
 
 import type { EphemeralSettings } from '../util/preload.preload.ts';
 
@@ -79,6 +81,41 @@ export class SettingsChannel extends EventEmitter {
         session: session.defaultSession,
         userConfig,
       });
+    });
+
+    ipc.handle('settings:get:networkProxyMode', () => {
+      const value = userConfig.get('networkProxyMode');
+      if (
+        value === 'direct' ||
+        value === 'system' ||
+        value === 'custom' ||
+        value === 'tor'
+      ) {
+        return value;
+      }
+
+      return 'system';
+    });
+    ipc.handle('settings:set:networkProxyMode', (_event, value) => {
+      strictAssert(
+        value === 'direct' ||
+          value === 'system' ||
+          value === 'custom' ||
+          value === 'tor',
+        'Invalid network proxy mode'
+      );
+      userConfig.set('networkProxyMode', value as NetworkProxyMode);
+    });
+    ipc.handle('settings:get:networkProxyUrl', () => {
+      const value = userConfig.get('networkProxyUrl');
+      return typeof value === 'string' ? value : null;
+    });
+    ipc.handle('settings:set:networkProxyUrl', (_event, value) => {
+      strictAssert(
+        value == null || (typeof value === 'string' && isValidProxyUrl(value)),
+        'Invalid network proxy URL'
+      );
+      userConfig.set('networkProxyUrl', value ?? null);
     });
   }
 

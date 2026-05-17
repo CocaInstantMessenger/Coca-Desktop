@@ -81,7 +81,6 @@ import { renderToastManagerWithoutMegaphone } from './ToastManager.preload.tsx';
 import { useToastActions } from '../ducks/toast.preload.ts';
 import { DataReader, DataWriter } from '../../sql/Client.preload.ts';
 import { deleteAllMyStories } from '../../util/deleteAllMyStories.preload.ts';
-import { SmartPreferencesDonations } from './PreferencesDonations.preload.tsx';
 import { useDonationsActions } from '../ducks/donations.preload.ts';
 import { generateDonationReceiptBlob } from '../../util/generateDonationReceipt.dom.ts';
 import { getProfiles } from '../selectors/notificationProfiles.dom.ts';
@@ -105,6 +104,7 @@ import type { StorageAccessType } from '../../types/Storage.d.ts';
 import type { ThemeType } from '../../util/preload.preload.ts';
 import type { WidthBreakpoint } from '../../components/_util.std.ts';
 import { DialogType } from '../../types/Dialogs.std.ts';
+import type { NetworkProxyMode } from '../../types/NetworkProxy.std.ts';
 import { promptOSAuth } from '../../util/promptOSAuth.preload.ts';
 import type { StateType } from '../reducer.preload.ts';
 import {
@@ -112,7 +112,6 @@ import {
   resumeBackupMediaDownload,
   cancelBackupMediaDownload,
 } from '../../util/backupMediaDownload.preload.ts';
-import { DonationsErrorBoundary } from '../../components/DonationsErrorBoundary.dom.tsx';
 import type { SmartPreferencesChatFoldersPageProps } from './PreferencesChatFoldersPage.preload.tsx';
 import type { SmartPreferencesEditChatFolderPageProps } from './PreferencesEditChatFolderPage.preload.tsx';
 import type { ExternalProps as SmartNotificationProfilesProps } from './PreferencesNotificationProfiles.preload.tsx';
@@ -159,26 +158,6 @@ function renderProfileEditor(options: {
   contentsRef: MutableRefObject<HTMLDivElement | null>;
 }): JSX.Element {
   return <SmartProfileEditor contentsRef={options.contentsRef} />;
-}
-
-function renderDonationsPane({
-  contentsRef,
-  settingsLocation,
-  setSettingsLocation,
-}: {
-  contentsRef: MutableRefObject<HTMLDivElement | null>;
-  settingsLocation: SettingsLocation;
-  setSettingsLocation: (settingsLocation: SettingsLocation) => void;
-}): JSX.Element {
-  return (
-    <DonationsErrorBoundary>
-      <SmartPreferencesDonations
-        contentsRef={contentsRef}
-        settingsLocation={settingsLocation}
-        setSettingsLocation={setSettingsLocation}
-      />
-    </DonationsErrorBoundary>
-  );
 }
 
 function getSystemTraySettingValues(
@@ -405,6 +384,8 @@ export function SmartPreferences(): JSX.Element | null {
   const [hasContentProtection, setContentProtection] = useState<boolean>();
   const [hasSpellCheck, setSpellCheck] = useState<boolean>();
   const [themeSetting, setThemeSetting] = useState<ThemeType>();
+  const [networkProxyMode, setNetworkProxyMode] = useState<NetworkProxyMode>();
+  const [networkProxyUrl, setNetworkProxyUrl] = useState<string | null>();
 
   useEffect(() => {
     let canceled = false;
@@ -451,6 +432,24 @@ export function SmartPreferences(): JSX.Element | null {
     };
     drop(loadThemeSetting());
 
+    const loadNetworkProxyMode = async () => {
+      const value = await window.Events.getNetworkProxyMode();
+      if (canceled) {
+        return;
+      }
+      setNetworkProxyMode(value);
+    };
+    drop(loadNetworkProxyMode());
+
+    const loadNetworkProxyUrl = async () => {
+      const value = await window.Events.getNetworkProxyUrl();
+      if (canceled) {
+        return;
+      }
+      setNetworkProxyUrl(value);
+    };
+    drop(loadNetworkProxyUrl());
+
     return () => {
       canceled = true;
     };
@@ -490,6 +489,16 @@ export function SmartPreferences(): JSX.Element | null {
     setThemeSetting(value);
     drop(window.Events.setThemeSetting(value));
     drop(themeChanged());
+  };
+  const onNetworkProxySettingsChange = async (
+    mode: NetworkProxyMode,
+    proxyUrl: string | null
+  ) => {
+    setNetworkProxyMode(mode);
+    setNetworkProxyUrl(proxyUrl);
+    await window.Events.setNetworkProxyUrl(proxyUrl);
+    await window.Events.setNetworkProxyMode(mode);
+    window.SignalContext.restartApp();
   };
 
   // Async IPC for electron configuration, all can be modified
@@ -767,7 +776,7 @@ export function SmartPreferences(): JSX.Element | null {
   );
   const [hasStoriesDisabled, onHasStoriesDisabledChanged] = createItemsAccess(
     'hasStoriesDisabled',
-    false,
+    true,
     async value => {
       const account = window.ConversationController.getOurConversationOrThrow();
       account.captureChange('hasStoriesDisabled');
@@ -922,6 +931,9 @@ export function SmartPreferences(): JSX.Element | null {
         blockedGroups={blockedGroups}
         currentChatFoldersCount={currentChatFoldersCount}
         cloudBackupStatus={cloudBackupStatus}
+        networkProxyMode={networkProxyMode}
+        networkProxyUrl={networkProxyUrl}
+        effectiveProxyUrl={window.SignalContext.config.proxyUrl}
         customColors={customColors}
         defaultConversationColor={defaultConversationColor}
         deviceName={deviceName}
@@ -1017,6 +1029,7 @@ export function SmartPreferences(): JSX.Element | null {
         onMediaCameraPermissionsChange={onMediaCameraPermissionsChange}
         onMediaPermissionsChange={onMediaPermissionsChange}
         onMessageAudioChange={onMessageAudioChange}
+        onNetworkProxySettingsChange={onNetworkProxySettingsChange}
         onMinimizeToAndStartInSystemTrayChange={
           onMinimizeToAndStartInSystemTrayChange
         }
@@ -1053,7 +1066,6 @@ export function SmartPreferences(): JSX.Element | null {
         refreshBackupSubscriptionStatus={refreshBackupSubscriptionStatus}
         removeCustomColorOnConversations={removeCustomColorOnConversations}
         removeCustomColor={removeCustomColor}
-        renderDonationsPane={renderDonationsPane}
         renderNotificationProfilesHome={renderNotificationProfilesHome}
         renderNotificationProfilesCreateFlow={
           renderNotificationProfilesCreateFlow

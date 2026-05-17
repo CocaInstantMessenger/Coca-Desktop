@@ -103,6 +103,7 @@ import { TitlebarDragArea } from './TitlebarDragArea.dom.tsx';
 import type { PreferredBadgeSelectorType } from '../state/selectors/badges.preload.ts';
 import { Emoji } from '../axo/emoji.std.ts';
 import { AxoConfirmDialog } from '../axo/AxoConfirmDialog.dom.tsx';
+import type { NetworkProxyMode } from '../types/NetworkProxy.std.ts';
 
 const { isNumber, noop, partition } = lodash;
 
@@ -149,6 +150,9 @@ export type PropsDataType = {
   hasMediaCameraPermissions: boolean | undefined;
   hasMediaPermissions: boolean | undefined;
   hasMessageAudio: boolean;
+  networkProxyMode: NetworkProxyMode | undefined;
+  networkProxyUrl: string | null | undefined;
+  effectiveProxyUrl: string | undefined;
   hasSealedSenderIndicators: boolean;
   hasMinimizeToAndStartInSystemTray: boolean | undefined;
   hasMinimizeToSystemTray: boolean | undefined;
@@ -228,11 +232,6 @@ export type PropsDataType = {
 
 type PropsFunctionType = {
   // Render props
-  renderDonationsPane: (options: {
-    contentsRef: MutableRefObject<HTMLDivElement | null>;
-    settingsLocation: SettingsLocation;
-    setSettingsLocation: (settingsLocation: SettingsLocation) => void;
-  }) => JSX.Element;
   renderNotificationProfilesHome: (
     props: SmartNotificationProfilesProps
   ) => JSX.Element;
@@ -336,6 +335,10 @@ type PropsFunctionType = {
   onMediaCameraPermissionsChange: CheckboxChangeHandlerType;
   onMediaPermissionsChange: CheckboxChangeHandlerType;
   onMessageAudioChange: CheckboxChangeHandlerType;
+  onNetworkProxySettingsChange: (
+    mode: NetworkProxyMode,
+    proxyUrl: string | null
+  ) => Promise<void>;
   onMinimizeToAndStartInSystemTrayChange: CheckboxChangeHandlerType;
   onMinimizeToSystemTrayChange: CheckboxChangeHandlerType;
   onNotificationAttentionChange: CheckboxChangeHandlerType;
@@ -460,6 +463,9 @@ export function Preferences({
   hasMediaCameraPermissions,
   hasMediaPermissions,
   hasMessageAudio,
+  networkProxyMode,
+  networkProxyUrl,
+  effectiveProxyUrl,
   hasMinimizeToAndStartInSystemTray,
   hasMinimizeToSystemTray,
   hasNotificationAttention,
@@ -517,6 +523,7 @@ export function Preferences({
   onMediaCameraPermissionsChange,
   onMediaPermissionsChange,
   onMessageAudioChange,
+  onNetworkProxySettingsChange,
   onMinimizeToAndStartInSystemTrayChange,
   onMinimizeToSystemTrayChange,
   onNotificationAttentionChange,
@@ -549,7 +556,6 @@ export function Preferences({
   refreshBackupSubscriptionStatus,
   removeCustomColor,
   removeCustomColorOnConversations,
-  renderDonationsPane,
   renderNotificationProfilesCreateFlow,
   renderNotificationProfilesHome,
   renderProfileEditor,
@@ -630,6 +636,14 @@ export function Preferences({
   const [languageSearchInput, setLanguageSearchInput] = useState('');
   const [confirmPnpNotDiscoverable, setConfirmPnpNoDiscoverable] =
     useState(false);
+  const [draftNetworkProxyMode, setDraftNetworkProxyMode] = useState<
+    NetworkProxyMode | undefined
+  >(networkProxyMode);
+  const [draftNetworkProxyUrl, setDraftNetworkProxyUrl] = useState(
+    networkProxyUrl ?? ''
+  );
+  const [networkProxyError, setNetworkProxyError] = useState<string>();
+  const [isApplyingNetworkProxy, setIsApplyingNetworkProxy] = useState(false);
 
   const handleOpenEditChatFoldersPage = useCallback(
     (chatFolderId: ChatFolderId | null) => {
@@ -647,6 +661,14 @@ export function Preferences({
     setLanguageDialog(null);
     setSelectedLanguageLocale(localeOverride);
   }
+
+  useEffect(() => {
+    setDraftNetworkProxyMode(networkProxyMode);
+  }, [networkProxyMode]);
+
+  useEffect(() => {
+    setDraftNetworkProxyUrl(networkProxyUrl ?? '');
+  }, [networkProxyUrl]);
 
   if (settingsLocation.page === SettingsPage.Internal && !isInternalUser) {
     setSettingsLocation({ page: SettingsPage.General });
@@ -688,6 +710,60 @@ export function Preferences({
     },
     [onContentProtectionChange, isContentProtectionNeeded]
   );
+
+  const applyNetworkProxySettings = useCallback(async () => {
+    if (!draftNetworkProxyMode) {
+      return;
+    }
+
+    const trimmedProxyUrl = draftNetworkProxyUrl.trim();
+
+    if (draftNetworkProxyMode === 'custom') {
+      try {
+        const url = new URL(trimmedProxyUrl);
+        if (
+          ![
+            'http:',
+            'https:',
+            'socks:',
+            'socks4:',
+            'socks4a:',
+            'socks5:',
+            'socks5h:',
+          ].includes(url.protocol)
+        ) {
+          throw new Error('Unsupported proxy protocol');
+        }
+      } catch {
+        setNetworkProxyError(
+          'Enter a valid proxy URL like socks5://127.0.0.1:9050 or http://127.0.0.1:8080.'
+        );
+        return;
+      }
+    }
+
+    setIsApplyingNetworkProxy(true);
+    setNetworkProxyError(undefined);
+
+    try {
+      await onNetworkProxySettingsChange(
+        draftNetworkProxyMode,
+        trimmedProxyUrl ? trimmedProxyUrl : null
+      );
+    } catch (error) {
+      setNetworkProxyError(
+        error instanceof Error
+          ? error.message
+          : 'Failed to save proxy settings.'
+      );
+    } finally {
+      setIsApplyingNetworkProxy(false);
+    }
+  }, [
+    draftNetworkProxyMode,
+    draftNetworkProxyUrl,
+    onNetworkProxySettingsChange,
+  ]);
 
   const settingsPaneRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -815,7 +891,10 @@ export function Preferences({
     content = renderProfileEditor({
       contentsRef: settingsPaneRef,
     });
-  } else if (settingsLocation.page === SettingsPage.General) {
+  } else if (
+    settingsLocation.page === SettingsPage.General ||
+    isDonationsPage(settingsLocation.page)
+  ) {
     const pageContents = (
       <>
         <SettingsRow>
@@ -943,12 +1022,6 @@ export function Preferences({
         title={i18n('icu:Preferences__button--general')}
       />
     );
-  } else if (isDonationsPage(settingsLocation.page)) {
-    content = renderDonationsPane({
-      contentsRef: settingsPaneRef,
-      settingsLocation,
-      setSettingsLocation,
-    });
   } else if (settingsLocation.page === SettingsPage.Appearance) {
     let zoomFactors = DEFAULT_ZOOM_FACTORS;
 
@@ -971,7 +1044,6 @@ export function Preferences({
           ? getLocaleDisplayName(resolvedLocale, localeOverride)
           : i18n('icu:Preferences__Language__SystemLanguage');
     }
-
     const pageContents = (
       <SettingsRow>
         <Control
@@ -1951,6 +2023,116 @@ export function Preferences({
             />
           )}
         </SettingsRow>
+        <SettingsRow title="Network">
+          <FlowingControl>
+            <div className="Preferences__two-thirds-flow">
+              <div>Proxy routing</div>
+              <div className="Preferences__description">
+                Route app traffic through a SOCKS5, HTTP, or Tor proxy. Changes
+                apply after restart.
+              </div>
+              {effectiveProxyUrl ? (
+                <div className="Preferences__description">
+                  Active proxy: {effectiveProxyUrl}
+                </div>
+              ) : (
+                <div className="Preferences__description">
+                  Active proxy: direct connection
+                </div>
+              )}
+            </div>
+            <div
+              className={classNames(
+                'Preferences__flow-button',
+                'Preferences__one-third-flow',
+                'Preferences__one-third-flow--align-right'
+              )}
+            >
+              <Select
+                ariaLabel="Proxy routing"
+                onChange={value => {
+                  setDraftNetworkProxyMode(value as NetworkProxyMode);
+                  setNetworkProxyError(undefined);
+                }}
+                options={[
+                  { text: 'Direct', value: 'direct' },
+                  { text: 'System / environment', value: 'system' },
+                  { text: 'Custom proxy URL', value: 'custom' },
+                  { text: 'Tor (127.0.0.1:9050)', value: 'tor' },
+                ]}
+                value={draftNetworkProxyMode ?? 'system'}
+              />
+            </div>
+          </FlowingControl>
+          {draftNetworkProxyMode === 'custom' && (
+            <FlowingControl>
+              <div className="Preferences__two-thirds-flow">
+                <input
+                  className="Preferences__text-input"
+                  placeholder="socks5://127.0.0.1:9050"
+                  type="text"
+                  value={draftNetworkProxyUrl}
+                  onChange={event => {
+                    setDraftNetworkProxyUrl(event.currentTarget.value);
+                    setNetworkProxyError(undefined);
+                  }}
+                />
+                <div className="Preferences__description">
+                  Supports `socks5://`, `socks5h://`, `http://`, and `https://`
+                  proxy URLs.
+                </div>
+              </div>
+              <div
+                className={classNames(
+                  'Preferences__flow-button',
+                  'Preferences__one-third-flow',
+                  'Preferences__one-third-flow--align-right'
+                )}
+              >
+                <AxoButton.Root
+                  variant="secondary"
+                  size="lg"
+                  disabled={isApplyingNetworkProxy}
+                  onClick={() => void applyNetworkProxySettings()}
+                >
+                  Apply and Restart
+                </AxoButton.Root>
+              </div>
+            </FlowingControl>
+          )}
+          {draftNetworkProxyMode !== 'custom' && (
+            <FlowingControl>
+              <div className="Preferences__two-thirds-flow">
+                <div className="Preferences__description">
+                  {draftNetworkProxyMode === 'tor'
+                    ? 'Uses the local Tor SOCKS proxy at 127.0.0.1:9050.'
+                    : draftNetworkProxyMode === 'system'
+                      ? 'Uses COCA_PROXY_URL / ALL_PROXY / SOCKS_PROXY / HTTPS_PROXY / HTTP_PROXY when set.'
+                      : 'Disables configured proxy routing for the app.'}
+                </div>
+              </div>
+              <div
+                className={classNames(
+                  'Preferences__flow-button',
+                  'Preferences__one-third-flow',
+                  'Preferences__one-third-flow--align-right'
+                )}
+              >
+                <AxoButton.Root
+                  variant="secondary"
+                  size="lg"
+                  disabled={isApplyingNetworkProxy}
+                  onClick={() => void applyNetworkProxySettings()}
+                >
+                  Apply and Restart
+                </AxoButton.Root>
+              </div>
+            </FlowingControl>
+          )}
+          {networkProxyError && (
+            <div className="Preferences__error-text">{networkProxyError}</div>
+          )}
+        </SettingsRow>
         <SettingsRow>
           {!weArePrimaryDevice && (
             <FlowingControl>
@@ -2764,21 +2946,6 @@ export function Preferences({
                 }
               >
                 {i18n('icu:Preferences__button--backups')}
-              </button>
-              <button
-                type="button"
-                className={classNames({
-                  Preferences__button: true,
-                  'Preferences__button--donations': true,
-                  'Preferences__button--selected': isDonationsPage(
-                    settingsLocation.page
-                  ),
-                })}
-                onClick={() =>
-                  setSettingsLocation({ page: SettingsPage.Donations })
-                }
-              >
-                {i18n('icu:Preferences__button--donate')}
               </button>
               {isInternalUser ? (
                 <button

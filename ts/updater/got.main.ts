@@ -10,15 +10,12 @@ import { getUserAgent } from '../util/getUserAgent.node.ts';
 import * as durations from '../util/durations/index.std.ts';
 import { createHTTPSAgent } from '../util/createHTTPSAgent.node.ts';
 import { createProxyAgent } from '../util/createProxyAgent.node.ts';
+import { getResolvedProxyUrl } from '../util/networkProxy.main.ts';
 
 const GOT_CONNECT_TIMEOUT = durations.MINUTE;
 const GOT_LOOKUP_TIMEOUT = durations.MINUTE;
 const GOT_SOCKET_TIMEOUT = durations.MINUTE;
 const GOT_RETRY_LIMIT = 3;
-
-function getProxyUrl(): string | undefined {
-  return process.env.HTTPS_PROXY || process.env.https_proxy;
-}
 
 function getCertificateAuthority(): string {
   return config.get('certificateAuthority');
@@ -28,7 +25,7 @@ export type { GotOptions };
 
 export async function getGotOptions(): Promise<GotOptions> {
   const certificateAuthority = getCertificateAuthority();
-  const proxyUrl = getProxyUrl();
+  const proxyUrl = getResolvedProxyUrl();
   const agent = proxyUrl
     ? {
         http: await createProxyAgent(proxyUrl),

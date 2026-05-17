@@ -30,6 +30,7 @@ import { fromWebSafeBase64 } from './webSafeBase64.std.ts';
 import { showConfirmationDialog } from './showConfirmationDialog.dom.tsx';
 import type {
   EphemeralSettings,
+  PersistentAppSettings,
   SettingsValuesType,
   ThemeType,
 } from './preload.preload.ts';
@@ -90,6 +91,8 @@ type ValuesWithGetters = Omit<
   | 'mediaCameraPermissions'
   | 'spellCheck'
   | 'contentProtection'
+  | 'networkProxyMode'
+  | 'networkProxyUrl'
   | 'systemTraySetting'
   | 'themeSetting'
   | 'zoomFactor'
@@ -124,6 +127,8 @@ export type IPCEventsGettersType = {
   getMediaCameraPermissions: () => Promise<boolean>;
   getSpellCheck: () => Promise<boolean>;
   getContentProtection: () => Promise<boolean>;
+  getNetworkProxyMode: () => Promise<PersistentAppSettings['networkProxyMode']>;
+  getNetworkProxyUrl: () => Promise<string | null>;
   getSystemTraySetting: () => Promise<SystemTraySetting>;
   getThemeSetting: () => Promise<ThemeType>;
   getZoomFactor: () => Promise<ZoomFactorType>;
@@ -138,6 +143,10 @@ export type IPCEventsSettersType = {
   ) => Promise<void>;
 } & {
   setLocaleOverride: (value: string | null) => Promise<void>;
+  setNetworkProxyMode: (
+    value: PersistentAppSettings['networkProxyMode']
+  ) => Promise<void>;
+  setNetworkProxyUrl: (value: string | null) => Promise<void>;
   setMediaPermissions?: (value: boolean) => Promise<void>;
   setMediaCameraPermissions?: (value: boolean) => Promise<void>;
 };
@@ -214,6 +223,18 @@ export function createIPCEvents(
     },
     setContentProtection: async (value: boolean) => {
       await setEphemeralSetting('contentProtection', value);
+    },
+    getNetworkProxyMode: async () => {
+      return (await getPersistentSetting('networkProxyMode')) ?? 'system';
+    },
+    setNetworkProxyMode: async value => {
+      await setPersistentSetting('networkProxyMode', value);
+    },
+    getNetworkProxyUrl: async () => {
+      return (await getPersistentSetting('networkProxyUrl')) ?? null;
+    },
+    setNetworkProxyUrl: async (value: string | null) => {
+      await setPersistentSetting('networkProxyUrl', value);
     },
     getSpellCheck: async () => {
       return (await getEphemeralSetting('spellCheck')) ?? false;
@@ -457,15 +478,28 @@ function showUnknownSgnlLinkModal(): void {
   });
 }
 
-function getEphemeralSetting<Name extends keyof EphemeralSettings>(
+export function getEphemeralSetting<Name extends keyof EphemeralSettings>(
   name: Name
 ): Promise<EphemeralSettings[Name]> {
+  return ipcRenderer.invoke(`settings:get:${name}`);
+}
+
+function getPersistentSetting<Name extends keyof PersistentAppSettings>(
+  name: Name
+): Promise<PersistentAppSettings[Name]> {
   return ipcRenderer.invoke(`settings:get:${name}`);
 }
 
 function setEphemeralSetting<Name extends keyof EphemeralSettings>(
   name: Name,
   value: EphemeralSettings[Name]
+): Promise<void> {
+  return ipcRenderer.invoke(`settings:set:${name}`, value);
+}
+
+function setPersistentSetting<Name extends keyof PersistentAppSettings>(
+  name: Name,
+  value: PersistentAppSettings[Name]
 ): Promise<void> {
   return ipcRenderer.invoke(`settings:set:${name}`, value);
 }

@@ -664,6 +664,7 @@ export const DataWriter: ServerWritableInterface = {
   getUnreadEditedMessagesAndMarkRead,
   clearCallHistory,
   _removeAllCallHistory,
+  deleteCallHistoryOlderThan,
   markCallHistoryDeleted,
   cleanupCallHistoryMessages,
   markCallHistoryRead,
@@ -4625,6 +4626,44 @@ function _removeAllCallHistory(db: WritableDB): void {
     DELETE FROM callsHistory;
   `;
   db.prepare(query).run(params);
+}
+
+function deleteCallHistoryOlderThan(db: WritableDB, timestamp: number): void {
+  return db.transaction(() => {
+    const [selectCallsQuery, selectCallsParams] = sql`
+      SELECT callId
+      FROM callsHistory
+      WHERE timestamp < ${timestamp};
+    `;
+
+    const deletedCallIds: ReadonlyArray<string> = db
+      .prepare(selectCallsQuery, {
+        pluck: true,
+      })
+      .all(selectCallsParams);
+    if (!deletedCallIds.length) {
+      return;
+    }
+
+    batchMultiVarQuery(db, deletedCallIds, (ids, persistent): void => {
+      const idsFragment = sqlJoin(ids);
+
+      const [deleteMessagesQuery, deleteMessagesParams] = sql`
+        DELETE FROM messages
+        WHERE messages.type IS 'call-history'
+        AND messages.callId IN (${idsFragment});
+      `;
+      db.prepare(deleteMessagesQuery, { persistent }).run(deleteMessagesParams);
+
+      const [deleteCallsHistoryQuery, deleteCallsHistoryParams] = sql`
+        DELETE FROM callsHistory
+        WHERE callsHistory.callId IN (${idsFragment});
+      `;
+      db.prepare(deleteCallsHistoryQuery, { persistent }).run(
+        deleteCallsHistoryParams
+      );
+    });
+  })();
 }
 
 /**

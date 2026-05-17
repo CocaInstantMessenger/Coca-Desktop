@@ -8,7 +8,6 @@ import type { BoundActionCreatorsMapObject } from '../../hooks/useBoundActions.s
 import { useBoundActions } from '../../hooks/useBoundActions.std.ts';
 import { createLogger } from '../../logging/log.std.ts';
 import { AppViewType } from '../../types/app.std.ts';
-import { getEnvironment, Environment } from '../../environment.std.ts';
 import {
   START_INSTALLER,
   type StartInstallerActionType,
@@ -86,10 +85,6 @@ function openStandalone(): ThunkAction<
   OpenStandaloneActionType
 > {
   return dispatch => {
-    if (getEnvironment() === Environment.PackagedApp) {
-      return;
-    }
-
     window.IPC.addSetupMenuItems();
     dispatch({
       type: OPEN_STANDALONE,

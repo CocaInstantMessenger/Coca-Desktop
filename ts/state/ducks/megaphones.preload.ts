@@ -14,9 +14,6 @@ import type {
   RemoteMegaphoneId,
   VisibleRemoteMegaphoneType,
 } from '../../types/Megaphone.std.ts';
-import type { ChangeLocationAction } from './nav.std.ts';
-import { actions as navActions } from './nav.std.ts';
-import { NavTab, SettingsPage } from '../../types/Nav.std.ts';
 import { isTestMegaphoneId } from '../../util/getTestMegaphone.std.ts';
 
 const log = createLogger('megaphones');
@@ -82,12 +79,7 @@ function removeVisibleMegaphone(
 function interactWithMegaphone(
   megaphoneId: RemoteMegaphoneId,
   ctaId: MegaphoneCtaId
-): ThunkAction<
-  void,
-  RootStateType,
-  unknown,
-  RemoveVisibleMegaphoneAction | ChangeLocationAction
-> {
+): ThunkAction<void, RootStateType, unknown, RemoveVisibleMegaphoneAction> {
   return async dispatch => {
     const isTest = isTestMegaphoneId(megaphoneId);
 
@@ -105,16 +97,7 @@ function interactWithMegaphone(
       }
     }
 
-    if (ctaId === 'donate') {
-      dispatch(
-        navActions.changeLocation({
-          tab: NavTab.Settings,
-          details: {
-            page: SettingsPage.DonationsDonateFlow,
-          },
-        })
-      );
-    } else if (ctaId === 'snooze') {
+    if (ctaId === 'snooze') {
       try {
         log.info(`Snoozing megaphone ${megaphoneId}`);
         if (!isTest) {

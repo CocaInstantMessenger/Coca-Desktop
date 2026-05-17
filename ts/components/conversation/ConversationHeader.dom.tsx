@@ -3,6 +3,7 @@
 
 import type { RefObject, JSX, ReactNode } from 'react';
 import { memo, useCallback, useMemo, useRef, useState } from 'react';
+import lodash from 'lodash';
 import type { ReadonlyDeep } from 'type-fest';
 import type { BadgeType } from '../../badges/types.std.ts';
 import {
@@ -53,6 +54,8 @@ import { OfficialChatInlineBadge } from './OfficialChatInlineBadge.dom.tsx';
 import { AxoIconButton } from '../../axo/AxoIconButton.dom.tsx';
 import { AxoButton } from '../../axo/AxoButton.dom.tsx';
 import { AxoConfirmDialog } from '../../axo/AxoConfirmDialog.dom.tsx';
+
+const { noop } = lodash;
 
 function HeaderInfoTitle({
   name,
@@ -959,10 +962,14 @@ function OutgoingCallButtons({
   | 'onOutgoingVideoCall'
   | 'outgoingCallButtonStyle'
 >): JSX.Element | null {
+  const callingDisabledByProxy = Boolean(
+    window.SignalContext.config.proxyUrl
+  );
   const disabled =
     conversation.type === 'group' &&
     ((conversation.announcementsOnly && !conversation.areWeAdmin) ||
-      conversation.terminated);
+      conversation.terminated ||
+      callingDisabledByProxy);
   const inAnotherCall = !disabled && hasActiveCall;
 
   const videoButton = (
@@ -990,8 +997,8 @@ function OutgoingCallButtons({
   );
 
   const startCallShortcuts = useStartCallShortcuts(
-    onOutgoingAudioCall,
-    onOutgoingVideoCall
+    callingDisabledByProxy ? noop : onOutgoingAudioCall,
+    callingDisabledByProxy ? noop : onOutgoingVideoCall
   );
   useKeyboardShortcuts(startCallShortcuts);
 

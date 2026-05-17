@@ -195,7 +195,9 @@ import {
   onSuccessfulDecrypt,
 } from './util/handleRetry.preload.ts';
 import { themeChanged } from './shims/themeChanged.dom.ts';
-import { createIPCEvents } from './util/createIPCEvents.preload.ts';
+import {
+  createIPCEvents,
+} from './util/createIPCEvents.preload.ts';
 import type { ServiceIdString } from './types/ServiceId.std.ts';
 import {
   ServiceIdKind,
@@ -329,7 +331,6 @@ async function startApp(): Promise<void> {
   if (window.initialTheme === ThemeType.dark) {
     document.body.classList.add('dark-theme');
   }
-
   const idleDetector = new IdleDetector();
 
   await KeyboardLayout.initialize();
@@ -572,7 +573,7 @@ async function startApp(): Promise<void> {
       connectWebAPI({
         ...itemStorage.user.getWebAPICredentials(),
         hasBuildExpired: buildExpirationService.hasBuildExpired(),
-        hasStoriesDisabled: itemStorage.get('hasStoriesDisabled', false),
+        hasStoriesDisabled: itemStorage.get('hasStoriesDisabled', true),
       })
     );
 
@@ -1300,6 +1301,7 @@ async function startApp(): Promise<void> {
   });
 
   window.Whisper.events.on('setupAsStandalone', () => {
+    window.reduxActions.installer.stopInstaller();
     window.reduxActions.app.openStandalone();
   });
 

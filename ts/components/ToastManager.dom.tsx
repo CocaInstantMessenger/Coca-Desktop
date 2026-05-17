@@ -385,7 +385,7 @@ function renderToast({
             changeLocation({
               tab: NavTab.Settings,
               details: {
-                page: SettingsPage.Donations,
+                page: SettingsPage.General,
               },
             }),
         }}
@@ -408,7 +408,7 @@ function renderToast({
             changeLocation({
               tab: NavTab.Settings,
               details: {
-                page: SettingsPage.DonationsDonateFlow,
+                page: SettingsPage.General,
               },
             });
           },
@@ -454,11 +454,6 @@ function renderToast({
       ),
     };
 
-    const pageRedirect =
-      toastType === ToastType.DonationPaypalConfirmationNeeded
-        ? SettingsPage.DonationsDonateFlow
-        : SettingsPage.Donations;
-
     const text = mapping[toastType];
 
     return (
@@ -471,7 +466,7 @@ function renderToast({
             changeLocation({
               tab: NavTab.Settings,
               details: {
-                page: pageRedirect,
+                page: SettingsPage.General,
               },
             });
           },

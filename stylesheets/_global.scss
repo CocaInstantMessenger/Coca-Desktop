@@ -631,6 +631,123 @@ $loading-height: 16px;
   .StandaloneRegistration__error {
     color: variables.$color-accent-red;
   }
+
+  &.StandaloneRegistration {
+    background:
+      radial-gradient(
+        circle at top,
+        variables.$color-white 0%,
+        rgb(244, 247, 255) 35%,
+        rgb(230, 236, 247) 100%
+      ),
+      linear-gradient(180deg, rgb(250, 251, 253), rgb(232, 237, 245));
+
+    .StandaloneRegistration__panel {
+      width: min(560px, calc(100vw - 40px));
+      border-radius: 24px;
+      padding: 32px 28px 24px;
+      box-shadow:
+        0 24px 60px variables.$color-black-alpha-20,
+        inset 0 1px 0 variables.$color-white-alpha-80;
+      background: variables.$color-white-alpha-90;
+      backdrop-filter: blur(16px);
+    }
+
+    .step {
+      padding-block: 32px;
+    }
+
+    .step-body {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      max-width: none;
+    }
+
+    .banner-image {
+      display: inline-block;
+      height: 96px;
+      margin: 0 auto 6px;
+      width: 96px;
+    }
+
+    .StandaloneRegistration__eyebrow {
+      @include mixins.font-body-2-bold;
+      color: variables.$color-ultramarine;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .header {
+      margin-bottom: 0;
+      font-size: 24pt;
+      line-height: 1.1;
+    }
+
+    .StandaloneRegistration__subtitle,
+    .StandaloneRegistration__body-copy,
+    .StandaloneRegistration__footnote {
+      @include mixins.font-body-2;
+      color: variables.$color-gray-60;
+      line-height: 1.5;
+      max-width: 34em;
+      margin-inline: auto;
+    }
+
+    .StandaloneRegistration__input,
+    .phone-input .number,
+    input.form-control {
+      box-sizing: border-box;
+      width: 100%;
+      border: 1px solid variables.$color-gray-25;
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin: 0;
+      text-align: start;
+      background: variables.$color-white;
+      box-shadow: inset 0 1px 2px variables.$color-black-alpha-10;
+    }
+
+    .phone-input .number {
+      width: 100%;
+      margin-top: 0;
+    }
+
+    .StandaloneRegistration__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 8px;
+      padding-bottom: 0;
+    }
+
+    .button {
+      min-width: 0;
+      margin: 0;
+      border-radius: 14px;
+      padding: 14px 18px;
+      box-shadow: 0 10px 24px variables.$color-black-alpha-20;
+      font-size: 13pt;
+      font-weight: 600;
+    }
+
+    .button--secondary {
+      background: variables.$color-gray-05;
+      color: variables.$color-black;
+    }
+
+    .nav {
+      margin-top: 20px;
+      width: auto;
+      padding-inline: 0;
+    }
+
+    .StandaloneRegistration__error {
+      min-height: 24px;
+      margin-top: -4px;
+    }
+  }
 }
 
 //yellow border fix

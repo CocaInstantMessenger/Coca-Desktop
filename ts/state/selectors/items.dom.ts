@@ -123,7 +123,7 @@ export const isInternalUser = createSelector(
 // Note: ts/util/stories is the other place this check is done
 export const getStoriesEnabled = createSelector(
   getItems,
-  (state: ItemsStateType): boolean => !state.hasStoriesDisabled
+  (state: ItemsStateType): boolean => state.hasStoriesDisabled === false
 );
 
 export const getKeyTransparencyEnabled = createSelector(

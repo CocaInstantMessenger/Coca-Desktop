@@ -6,6 +6,7 @@ import { ipcRenderer } from 'electron';
 import { strictAssert } from './assert.std.ts';
 import * as Errors from '../types/errors.std.ts';
 import type { IPCEventsValuesType } from './createIPCEvents.preload.ts';
+import type { NetworkProxyMode } from '../types/NetworkProxy.std.ts';
 import type { SystemTraySetting } from '../types/SystemTraySetting.std.ts';
 
 type SettingOptionsType = {
@@ -28,7 +29,14 @@ export type EphemeralSettings = {
   themeSetting: ThemeType;
 };
 
-export type SettingsValuesType = IPCEventsValuesType & EphemeralSettings;
+export type PersistentAppSettings = {
+  networkProxyMode: NetworkProxyMode;
+  networkProxyUrl: string | null;
+};
+
+export type SettingsValuesType = IPCEventsValuesType &
+  EphemeralSettings &
+  PersistentAppSettings;
 
 type SettingGetterType<Key extends keyof SettingsValuesType> =
   `get${Capitalize<Key>}`;
