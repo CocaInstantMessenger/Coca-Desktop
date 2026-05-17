@@ -1,28 +1,12 @@
-<!-- Copyright 2014 Signal Messenger, LLC -->
-<!-- SPDX-License-Identifier: AGPL-3.0-only -->
+# Coca Desktop
 
-# Signal Desktop
-
-Signal Desktop links with Signal on [Android](https://github.com/signalapp/Signal-Android) or [iOS](https://github.com/signalapp/Signal-iOS) and lets you message from your Windows, macOS, and Linux computers.
+Coca Desktop links with Signal on [Android](https://github.com/signalapp/Signal-Android) or [iOS](https://github.com/signalapp/Signal-iOS) and lets you message from your Windows, macOS, and Linux computers.
 
 [Install the production version](https://signal.org/download/) or help us out by [installing the beta version](https://support.signal.org/hc/articles/360007318471-Signal-Beta).
-
-## Got a question?
-
-You can find answers to a number of frequently asked questions on our [support site](https://support.signal.org/).
-The [community forum](https://community.signalusers.org/) is another good place for questions.
 
 ## Found a Bug?
 
 Please search for any [existing issues](https://github.com/signalapp/Signal-Desktop/issues) that describe your bug in order to avoid duplicate submissions.
-
-## Have a feature request, question, comment?
-
-Please use our community forum: https://community.signalusers.org/
-
-## Contributing to the project
-
-Please see [CONTRIBUTING.md](https://github.com/signalapp/Signal-Desktop/blob/main/CONTRIBUTING.md). There are lots of ways to contribute - many that don't involve code!
 
 ## Donate to Signal
 
@@ -39,6 +23,10 @@ The form and manner of this distribution makes it eligible for export under the 
 
 ## License
 
-Copyright 2013-2024 Signal Messenger, LLC
-
 Licensed under the GNU AGPLv3: https://www.gnu.org/licenses/agpl-3.0.html
+
+## Legal Notice
+
+This project is *NOT* affiliated with Signal Messenger or the Signal Foundation.
+
+The software is developed independently and provided as-is, without warranties of any kind. Use at your own risk.
